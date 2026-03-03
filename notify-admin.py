@@ -1,59 +1,68 @@
 import asyncio
-from aiogram import Bot, Dispatcher, types, F
+import logging
+from aiogram import Bot, Dispatcher, F
 from aiogram.types import CallbackQuery
 
-# НОВИЙ ТОКЕН
+# Твій актуальний токен
 API_TOKEN = "8651326096:AAFBOQ-GPNJKON6KGic81DvxHjH-XDXwYFM"
 
+logging.basicConfig(level=logging.INFO)
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
 
-@dp.callback_query(F.data.startswith("approve_"))
-async def approve_handler(callback: CallbackQuery):
-    data = callback.data.split("_")
-    user_id = data[1]
-    amount = data[2]
-    
-    # Оновлюємо текст повідомлення в адміна
-    await callback.message.edit_text(
-        f"{callback.message.text}\n\n✅ **ОПЛАТУ ПІДТВЕРДЖЕНО**",
-        parse_mode="Markdown"
-    )
-    
-    # Пишемо клієнту
+# Обробка кнопки "Прийняти"
+@dp.callback_query(F.data.startswith("confirm_"))
+async def handle_confirm(callback: CallbackQuery):
     try:
-        await bot.send_message(
-            user_id, 
-            f"✅ Ваша оплата на суму {amount} ₴ успішно підтверджена!\nВаш доступ активовано. Дякуємо!"
-        )
-    except Exception as e:
-        print(f"Помилка відправки клієнту: {e}")
-    
-    await callback.answer("Підтверджено")
+        # Розбираємо дані: confirm_USERID_AMOUNT
+        parts = callback.data.split("_")
+        user_id = parts[1]
+        amount = parts[2]
 
-@dp.callback_query(F.data.startswith("reject_"))
-async def reject_handler(callback: CallbackQuery):
-    user_id = callback.data.split("_")[1]
-    
-    await callback.message.edit_text(
-        f"{callback.message.text}\n\n❌ **ОПЛАТУ ВІДХИЛЕНО**",
-        parse_mode="Markdown"
-    )
-    
-    try:
+        # 1. Оновлюємо повідомлення в тебе (адміна)
+        await callback.message.edit_text(
+            f"{callback.message.text}\n\n✅ **СТАТУС: ОПЛАЧЕНО**",
+            parse_mode="Markdown"
+        )
+
+        # 2. Надсилаємо повідомлення клієнту
         await bot.send_message(
             user_id, 
-            "❌ На жаль, вашу оплату не було підтверджено. Якщо ви оплатили, будь ласка, надішліть чек у підтримку."
+            f"✅ Ваша оплата ({amount} ₴) підтверджена!\nДякуємо за покупку, доступ активовано."
         )
-    except Exception as e:
-        print(f"Помилка відправки клієнту: {e}")
         
-    await callback.answer("Відхилено")
+        await callback.answer("Підтверджено успішно!")
+    except Exception as e:
+        logging.error(f"Помилка підтвердження: {e}")
+        await callback.answer("Помилка: можливо, юзер не запустив бота", show_alert=True)
+
+# Обробка кнопки "Відхилити"
+@dp.callback_query(F.data.startswith("cancel_"))
+async def handle_cancel(callback: CallbackQuery):
+    try:
+        user_id = callback.data.split("_")[1]
+
+        # 1. Оновлюємо повідомлення в тебе
+        await callback.message.edit_text(
+            f"{callback.message.text}\n\n❌ **СТАТУС: ВІДХИЛЕНО**",
+            parse_mode="Markdown"
+        )
+
+        # 2. Пишемо клієнту
+        await bot.send_message(
+            user_id, 
+            "❌ Вашу оплату відхилено адміністратором.\nЯкщо ви впевнені, що оплатили — напишіть нам у підтримку."
+        )
+        
+        await callback.answer("Відхилено")
+    except Exception as e:
+        logging.error(f"Помилка відхилення: {e}")
+        await callback.answer("Помилка при відхиленні", show_alert=True)
 
 async def main():
-    print("🚀 Адмін-бот запущений і готовий обробляти замовлення...")
+    print("🤖 Бот-адмін запущений і слухає кнопки...")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
     asyncio.run(main())
-  
+    
