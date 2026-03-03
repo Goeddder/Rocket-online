@@ -1,52 +1,91 @@
 import asyncio
+import logging
 from aiogram import Bot, Dispatcher, F
 from aiogram.types import CallbackQuery
+from aiogram.exceptions import TelegramForbiddenError
 
+# --- НАЛАШТУВАННЯ ---
 API_TOKEN = "8651326096:AAFBOQ-GPNJKON6KGic81DvxHjH-XDXwYFM"
+
+# Налаштування логування для відстеження натискань
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
 
-# Обробка кнопки "Прийняти"
-@dp.callback_query(F.data.startswith("confirm_"))
-async def handle_confirm(callback: CallbackQuery):
+# 1. ОБРОБКА КНОПКИ "ПРИЙНЯТИ" (ok_USERID_ORDERID)
+@dp.callback_query(F.data.startswith("ok_"))
+async def handle_approve(callback: CallbackQuery):
     try:
-        data = callback.data.split("_")
-        user_id = int(data[1])
-        amount = data[2]
-
-        # Оновлюємо ваше повідомлення
+        # Розбираємо дані з кнопки
+        _, user_id, order_id = callback.data.split("_")
+        
+        # Отримуємо поточний текст повідомлення
+        current_text = callback.message.text
+        
+        # Оновлюємо повідомлення в адміна (прибираємо кнопки, додаємо статус)
         await callback.message.edit_text(
-            f"{callback.message.text}\n\n✅ **СТАТУС: ПІДТВЕРДЖЕНО**",
+            f"{current_text}\n\n✅ **СТАТУС: ПІДТВЕРДЖЕНО**\n(Доступ надано замовленню #{order_id})",
             parse_mode="Markdown"
         )
 
-        # Пишемо клієнту
-        await bot.send_message(user_id, f"✅ Вашу оплату ({amount} ₴) підтверджено! Доступ активовано.")
-        await callback.answer("Виконано!")
+        # Надсилаємо радісну новину клієнту
+        await bot.send_message(
+            chat_id=int(user_id),
+            text=f"✅ **Вашу оплату замовлення #{order_id} прийнято!**\n\nТепер ви маєте повний доступ до софту. Дякуємо, що обрали нас! Якщо є питання — звертайтесь."
+        )
+        
+        # Маленьке сповіщення зверху в Телеграм адміна
+        await callback.answer("Оплату успішно прийнято!")
+
+    except TelegramForbiddenError:
+        await callback.answer("Помилка: Користувач заблокував бота", show_alert=True)
     except Exception as e:
-        await callback.answer("Помилка: користувач не написав боту /start", show_alert=True)
+        logging.error(f"Error in approve: {e}")
+        await callback.answer(f"Помилка: {e}", show_alert=True)
 
-# Обробка кнопки "Відхилити"
-@dp.callback_query(F.data.startswith("cancel_"))
-async def handle_cancel(callback: CallbackQuery):
+# 2. ОБРОБКА КНОПКИ "ВІДХИЛИТИ" (no_USERID_ORDERID)
+@dp.callback_query(F.data.startswith("no_"))
+async def handle_reject(callback: CallbackQuery):
     try:
-        user_id = int(callback.data.split("_")[1])
+        _, user_id, order_id = callback.data.split("_")
+        
+        current_text = callback.message.text
 
+        # Оновлюємо повідомлення в адміна
         await callback.message.edit_text(
-            f"{callback.message.text}\n\n❌ **СТАТУС: ВІДХИЛЕНО**",
+            f"{current_text}\n\n❌ **СТАТУС: ВІДХИЛЕНО**",
             parse_mode="Markdown"
         )
 
-        await bot.send_message(user_id, "❌ Вашу оплату відхилено адміністратором.")
-        await callback.answer("Відхилено")
-    except Exception as e:
-        await callback.answer("Помилка при відхиленні", show_alert=True)
+        # Сповіщаємо клієнта про відмову
+        await bot.send_message(
+            chat_id=int(user_id),
+            text=f"❌ **Вашу оплату замовлення #{order_id} відхилено.**\n\nМожливо, переказ не було знайдено або сума невірна. Будь ласка, напишіть адміністратору для уточнення."
+        )
+        
+        await callback.answer("Оплату відхилено")
 
+    except TelegramForbiddenError:
+        await callback.answer("Клієнт заблокував бота", show_alert=True)
+    except Exception as e:
+        logging.error(f"Error in reject: {e}")
+        await callback.answer("Сталася помилка при відхиленні")
+
+# 3. ЗАПУСК БОТА
 async def main():
-    print("🚀 Адмін-бот запущений і чекає на кнопки...")
+    print("---")
+    print("💎 Адмін-панель IllyaGarant ПРАЦЮЄ")
+    print("📡 Очікую на замовлення з Mini App...")
+    print("---")
+    
+    # Видаляємо старі повідомлення, щоб бот не відповідав на них при старті
+    await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
-    asyncio.run(main())
-    
+    try:
+        asyncio.run(main())
+    except (KeyboardInterrupt, SystemExit):
+        print("\nБот зупинений.")
+        
