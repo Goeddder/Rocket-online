@@ -17,19 +17,14 @@
             --text-main: #ffffff;
             --text-gray: #a1a1aa;
             --green: #22c55e;
-            --red: #ef4444;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
         
         body {
-            background: var(--bg-grad);
-            background-attachment: fixed;
-            color: var(--text-main);
-            font-family: 'Inter', -apple-system, sans-serif;
-            margin: 0; padding: 0;
-            min-height: 100vh;
-            overflow-x: hidden;
+            background: var(--bg-grad); background-attachment: fixed; color: var(--text-main);
+            font-family: 'Inter', -apple-system, sans-serif; margin: 0; padding: 0;
+            min-height: 100vh; overflow-x: hidden;
         }
 
         .container { padding: 25px 20px 140px 20px; }
@@ -37,79 +32,52 @@
 
         /* ПРОФІЛЬ */
         .profile-card { 
-            background: var(--card-bg); 
-            backdrop-filter: blur(15px);
-            border-radius: 32px; 
-            padding: 40px 20px; text-align: center; margin-bottom: 30px;
-            border: 1px solid rgba(255,255,255,0.1);
+            background: var(--card-bg); backdrop-filter: blur(15px); border-radius: 32px; 
+            padding: 40px 20px; text-align: center; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.1);
             box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 20px var(--accent-glow);
         }
-        .profile-avatar {
-            width: 110px; height: 110px; border-radius: 50%; 
-            margin: 0 auto 20px; border: 4px solid var(--accent);
-            box-shadow: 0 0 25px var(--accent);
-            object-fit: cover; display: block;
-        }
+        .profile-avatar { width: 110px; height: 110px; border-radius: 50%; margin: 0 auto 20px; border: 4px solid var(--accent); object-fit: cover; display: block; }
         .user-name { font-size: 24px; font-weight: 800; margin: 0; background: linear-gradient(to right, #fff, #a1a1aa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-        /* СІТКА МАГАЗИНУ */
+        /* МАГАЗИН */
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
         .card {
-            background: var(--card-bg); border-radius: 28px;
-            position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            aspect-ratio: 0.9 / 1;
+            background: var(--card-bg); border-radius: 28px; position: relative; overflow: hidden; 
+            border: 1px solid rgba(255,255,255,0.1); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); aspect-ratio: 0.9 / 1;
         }
         .card img { width: 100%; height: 100%; object-fit: cover; }
-        .card-badge {
-            position: absolute; bottom: 0; left: 0; right: 0;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
-            padding: 12px; font-size: 12px; font-weight: 800; text-align: center;
-        }
+        .card-badge { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); padding: 12px; font-size: 12px; font-weight: 800; text-align: center; }
 
         /* МОДАЛКА */
-        .sheet {
-            position: fixed; inset: 0; background: var(--bg-grad); z-index: 2000; display: none;
-            padding: 30px; overflow-y: auto;
-        }
-        .update-tag {
-            background: var(--green); color: #000; font-size: 10px; font-weight: 900; 
-            padding: 4px 12px; border-radius: 100px; display: inline-block; margin-bottom: 15px;
-        }
+        .sheet { position: fixed; inset: 0; background: var(--bg-grad); z-index: 2000; display: none; padding: 30px; overflow-y: auto; }
+        .update-tag { background: var(--green); color: #000; font-size: 10px; font-weight: 900; padding: 4px 12px; border-radius: 100px; display: inline-block; margin-bottom: 15px; }
+        
         .tariff-option {
             background: rgba(255,255,255,0.05); border-radius: 24px; padding: 22px;
             display: flex; justify-content: space-between; align-items: center;
-            border: 2px solid transparent; margin-bottom: 15px;
-            opacity: 0; transform: translateY(20px); transition: 0.5s ease;
+            border: 2px solid transparent; margin-bottom: 15px; opacity: 0; transform: translateY(20px); transition: 0.5s ease;
         }
         .sheet.active .tariff-option { opacity: 1; transform: translateY(0); }
-        .t-1 { transition-delay: 0.1s; }
-        .t-2 { transition-delay: 0.2s; }
-        .t-3 { transition-delay: 0.3s; }
-
+        .t-1 { transition-delay: 0.1s; } .t-2 { transition-delay: 0.2s; } .t-3 { transition-delay: 0.3s; }
         .tariff-option.active { border-color: var(--accent); background: var(--accent-glow); transform: scale(1.02); }
         
-        .btn-pay {
-            background: var(--accent); color: white; border: none; border-radius: 24px;
-            padding: 24px; width: 100%; font-size: 20px; font-weight: 900; margin-top: 20px;
-        }
+        .btn-pay { background: var(--accent); color: white; border: none; border-radius: 24px; padding: 24px; width: 100%; font-size: 20px; font-weight: 900; margin-top: 20px; }
 
         /* НАВІГАЦІЯ */
         .nav-bar {
             position: fixed; bottom: 20px; left: 20px; right: 20px;
             background: rgba(28, 28, 33, 0.8); backdrop-filter: blur(20px);
-            display: flex; justify-content: space-around;
-            padding: 18px 10px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); z-index: 1000;
+            display: flex; justify-content: space-around; padding: 18px 10px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); z-index: 1000;
         }
         .nav-item { background: none; border: none; color: var(--text-gray); display: flex; flex-direction: column; align-items: center; gap: 6px; }
         .nav-item.active { color: var(--accent); }
 
         /* ІСТОРІЯ */
         .history-item {
-            background: var(--card-bg); border-radius: 24px; padding: 20px;
-            margin-bottom: 15px; border-left: 5px solid var(--accent);
+            background: var(--card-bg); border-radius: 24px; padding: 20px; margin-bottom: 15px; border-left: 5px solid var(--accent);
             display: flex; justify-content: space-between; align-items: center;
         }
+        .btn-admin { background: var(--green); color: #000; border: none; border-radius: 8px; padding: 5px 10px; font-size: 10px; font-weight: 900; margin-top: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -147,42 +115,31 @@
 </div>
 
 <div id="pay-sheet" class="sheet animate__animated">
-    <div onclick="closeSheet()" style="cursor:pointer; color:var(--text-gray); margin-bottom: 20px; display:flex; align-items:center; gap:5px;">
-        <i data-lucide="chevron-left"></i> Назад
-    </div>
-    
+    <div onclick="closeSheet()" style="cursor:pointer; color:var(--text-gray); margin-bottom: 20px; display:flex; align-items:center; gap:5px;"><i data-lucide="chevron-left"></i> Назад</div>
     <div class="update-tag">ОНОВЛЕНО</div>
     <h1 id="sheet-title" style="font-size: 42px; margin: 0;">Софт</h1>
-    <p style="color: var(--text-gray); line-height: 1.5;">Найкращий функціонал. Працює без Root. Повний захист.</p>
-
+    <p style="color: var(--text-gray); line-height: 1.5;">Без Root. Повний захист. Автооновлення.</p>
     <div style="margin-top: 30px;" id="tariff-anchor">
         <div class="tariff-option active t-1" onclick="selectT(150, this, '7 днів')"><span>7 Днів</span> <b>150 ₴</b></div>
         <div class="tariff-option t-2" onclick="selectT(300, this, '30 днів')"><span>30 Днів</span> <b>300 ₴</b></div>
         <div class="tariff-option t-3" onclick="selectT(700, this, '90 днів')"><span>90 Днів</span> <b>700 ₴</b></div>
     </div>
-
     <button class="btn-pay animate__animated animate__pulse animate__infinite" onclick="goPay()">ПЕРЕЙТИ ДО ОПЛАТИ</button>
 </div>
 
 <script>
     const tg = window.Telegram.WebApp;
-    tg.ready();
-    tg.expand();
-    lucide.createIcons();
+    tg.ready(); tg.expand(); lucide.createIcons();
 
     let currentAmount = 150;
     let currentTariff = '7 днів';
-    
-    // ТВОЇ ДАНІ
     const BOT_TOKEN = "8651326096:AAFBOQ-GPNJKON6KGic81DvxHjH-XDXwYFM";
-    const ADMIN_ID = "1471307057";
+    const ADMIN_ID = 1471307057;
 
-    if(tg.initDataUnsafe?.user) {
-        const u = tg.initDataUnsafe.user;
-        document.getElementById('u-name').innerText = u.first_name;
-        document.getElementById('u-id').innerText = 'ID: ' + u.id;
-        if(u.photo_url) document.getElementById('u-photo').src = u.photo_url;
-    }
+    const user = tg.initDataUnsafe?.user || { id: 0, first_name: "Гість" };
+    document.getElementById('u-name').innerText = user.first_name;
+    document.getElementById('u-id').innerText = 'ID: ' + user.id;
+    if(user.photo_url) document.getElementById('u-photo').src = user.photo_url;
 
     function switchTab(tab, el) {
         document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
@@ -195,73 +152,67 @@
 
     function openSheet(name) {
         const sheet = document.getElementById('pay-sheet');
-        sheet.style.display = 'block';
-        sheet.classList.remove('animate__fadeOutDown', 'active');
-        sheet.classList.add('animate__fadeInUp');
+        sheet.style.display = 'block'; sheet.classList.remove('animate__fadeOutDown', 'active'); sheet.classList.add('animate__fadeInUp');
         document.getElementById('sheet-title').innerText = name;
-        
-        setTimeout(() => { 
-            sheet.classList.add('active'); 
-            document.getElementById('tariff-anchor').scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 100);
+        setTimeout(() => { sheet.classList.add('active'); document.getElementById('tariff-anchor').scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
     }
 
     function closeSheet() {
         const sheet = document.getElementById('pay-sheet');
-        sheet.classList.remove('active');
-        sheet.classList.replace('animate__fadeInUp', 'animate__fadeOutDown');
+        sheet.classList.remove('active'); sheet.classList.replace('animate__fadeInUp', 'animate__fadeOutDown');
         setTimeout(() => { sheet.style.display = 'none'; }, 500);
     }
 
     function selectT(amt, el, tName) {
         currentAmount = amt; currentTariff = tName;
         document.querySelectorAll('.tariff-option').forEach(o => o.classList.remove('active'));
-        el.classList.add('active');
-        tg.HapticFeedback.selectionChanged();
+        el.classList.add('active'); tg.HapticFeedback.selectionChanged();
     }
 
     function renderHistory() {
         const list = document.getElementById('history-list');
-        const orders = JSON.parse(localStorage.getItem('ilya_orders_final') || '[]');
+        const orders = JSON.parse(localStorage.getItem('ilya_final_v10') || '[]');
         if(!orders.length) { list.innerHTML = '<p style="text-align:center;color:gray;margin-top:50px;">Історія порожня</p>'; return; }
-        list.innerHTML = orders.reverse().map(o => `
-            <div class="history-item">
-                <div><b>${o.name}</b><br><small>${o.tariff} • ${o.price}₴</small></div>
-                <div style="text-align:right;"><div style="color:var(--accent);font-size:10px;font-weight:900;">ОБРОБКА</div><small style="color:gray;">${o.date}</small></div>
-            </div>
-        `).join('');
+        
+        list.innerHTML = orders.reverse().map((o, idx) => {
+            const isConfirmed = o.status === 'УСПІШНО';
+            const color = isConfirmed ? 'var(--green)' : 'var(--accent)';
+            const adminBtn = (user.id === ADMIN_ID && !isConfirmed) ? `<button class="btn-admin" onclick="confirmOrder(${orders.length - 1 - idx})">ПІДТВЕРДИТИ</button>` : '';
+            
+            return `
+                <div class="history-item" style="border-left-color: ${color}">
+                    <div><b>${o.name}</b><br><small>${o.tariff} • ${o.price}₴</small><br>${adminBtn}</div>
+                    <div style="text-align:right;"><div style="color:${color}; font-size:10px; font-weight:900;">${o.status}</div><small style="color:gray;">${o.date}</small></div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function confirmOrder(index) {
+        let orders = JSON.parse(localStorage.getItem('ilya_final_v10') || '[]');
+        orders[index].status = 'УСПІШНО';
+        localStorage.setItem('ilya_final_v10', JSON.stringify(orders));
+        renderHistory();
+        tg.HapticFeedback.notificationOccurred('success');
     }
 
     async function goPay() {
-        const user = tg.initDataUnsafe?.user || { id: 0, first_name: "Користувач" };
         const orderId = Math.floor(Math.random() * 8999) + 1000;
-        
-        // Зберігаємо в історію
-        const orders = JSON.parse(localStorage.getItem('ilya_orders_final') || '[]');
-        orders.push({ id: orderId, name: document.getElementById('sheet-title').innerText, tariff: currentTariff, price: currentAmount, date: new Date().toLocaleDateString() });
-        localStorage.setItem('ilya_orders_final', JSON.stringify(orders));
+        const orders = JSON.parse(localStorage.getItem('ilya_final_v10') || '[]');
+        orders.push({ id: orderId, name: document.getElementById('sheet-title').innerText, tariff: currentTariff, price: currentAmount, date: new Date().toLocaleDateString(), status: 'ОБРОБКА' });
+        localStorage.setItem('ilya_final_v10', JSON.stringify(orders));
 
-        // Посилання для адміна (щоб він міг відповісти тобі без скрипта)
-        // t.me/ТВОЙ_БОТ?start=ok_USERID_ORDERID
-        const botName = "PlutoniumResellerBot"; // ЗАМІНИ НА ЮЗЕРНЕЙМ БОТА БЕЗ @
+        const text = `🚀 *ЗАМОВЛЕННЯ #${orderId}*\n👤 Юзер: ${user.first_name}\n🆔 ID: \`${user.id}\`\n💰 Сума: ${currentAmount}₴\n📦 Тариф: ${currentTariff}`;
         
-        const text = `🚀 *ЗАМОВЛЕННЯ #${orderId}*\n\n👤 Юзер: ${user.first_name}\n🆔 ID: \`${user.id}\`\n💰 Сума: ${currentAmount}₴\n📦 Тариф: ${currentTariff}\n\nЩоб відповісти клієнту, скопіюй його ID та надішли повідомлення через свого бота.`;
-
-        // Відправка адміну
-        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                chat_id: ADMIN_ID,
-                text: text,
-                parse_mode: "Markdown"
-            })
+        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ chat_id: ADMIN_ID, text: text, parse_mode: "Markdown" })
         });
 
-        // Відкриваємо оплату
         tg.openLink(`https://send.monobank.ua/jar/7bpLBmtzoA?a=${currentAmount}`);
     }
 </script>
 </body>
 </html>
+
 
