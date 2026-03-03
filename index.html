@@ -17,6 +17,7 @@
             --text-main: #ffffff;
             --text-gray: #a1a1aa;
             --green: #22c55e;
+            --red: #ef4444;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
@@ -75,9 +76,11 @@
         /* ІСТОРІЯ */
         .history-item {
             background: var(--card-bg); border-radius: 24px; padding: 20px; margin-bottom: 15px; border-left: 5px solid var(--accent);
-            display: flex; justify-content: space-between; align-items: center;
+            display: flex; justify-content: space-between; align-items: center; transition: 0.3s;
         }
-        .btn-admin { background: var(--green); color: #000; border: none; border-radius: 8px; padding: 5px 10px; font-size: 10px; font-weight: 900; margin-top: 5px; cursor: pointer; }
+        .admin-controls { display: flex; gap: 8px; margin-top: 10px; }
+        .btn-adm-ok { background: var(--green); color: #000; border: none; border-radius: 8px; padding: 6px 12px; font-size: 10px; font-weight: 900; cursor: pointer; }
+        .btn-adm-no { background: var(--red); color: #fff; border: none; border-radius: 8px; padding: 6px 12px; font-size: 10px; font-weight: 900; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -133,8 +136,10 @@
 
     let currentAmount = 150;
     let currentTariff = '7 днів';
+    
+    // ТВОЇ КОНФІГИ
     const BOT_TOKEN = "8651326096:AAFBOQ-GPNJKON6KGic81DvxHjH-XDXwYFM";
-    const ADMIN_ID = 1471307057;
+    const ADMIN_ID = 1471307057; 
 
     const user = tg.initDataUnsafe?.user || { id: 0, first_name: "Гість" };
     document.getElementById('u-name').innerText = user.first_name;
@@ -171,38 +176,63 @@
 
     function renderHistory() {
         const list = document.getElementById('history-list');
-        const orders = JSON.parse(localStorage.getItem('ilya_final_v10') || '[]');
+        const orders = JSON.parse(localStorage.getItem('ilya_final_v11') || '[]');
         if(!orders.length) { list.innerHTML = '<p style="text-align:center;color:gray;margin-top:50px;">Історія порожня</p>'; return; }
         
         list.innerHTML = orders.reverse().map((o, idx) => {
-            const isConfirmed = o.status === 'УСПІШНО';
-            const color = isConfirmed ? 'var(--green)' : 'var(--accent)';
-            const adminBtn = (user.id === ADMIN_ID && !isConfirmed) ? `<button class="btn-admin" onclick="confirmOrder(${orders.length - 1 - idx})">ПІДТВЕРДИТИ</button>` : '';
+            const realIdx = orders.length - 1 - idx;
+            let statusColor = 'var(--accent)';
+            if(o.status === 'УСПІШНО') statusColor = 'var(--green)';
+            if(o.status === 'ВІДХИЛЕНО') statusColor = 'var(--red)';
+
+            const adminControls = (user.id === ADMIN_ID && o.status === 'ОБРОБКА') ? `
+                <div class="admin-controls">
+                    <button class="btn-adm-ok" onclick="updateStatus(${realIdx}, 'УСПІШНО')">ПРИЙНЯТИ</button>
+                    <button class="btn-adm-no" onclick="updateStatus(${realIdx}, 'ВІДХИЛЕНО')">ВІДХИЛИТИ</button>
+                </div>
+            ` : '';
             
             return `
-                <div class="history-item" style="border-left-color: ${color}">
-                    <div><b>${o.name}</b><br><small>${o.tariff} • ${o.price}₴</small><br>${adminBtn}</div>
-                    <div style="text-align:right;"><div style="color:${color}; font-size:10px; font-weight:900;">${o.status}</div><small style="color:gray;">${o.date}</small></div>
+                <div class="history-item" style="border-left-color: ${statusColor}">
+                    <div>
+                        <b>${o.name}</b><br>
+                        <small>${o.tariff} • ${o.price}₴</small>
+                        ${adminControls}
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="color:${statusColor}; font-size:10px; font-weight:900;">${o.status}</div>
+                        <small style="color:gray;">${o.date}</small>
+                    </div>
                 </div>
             `;
         }).join('');
     }
 
-    function confirmOrder(index) {
-        let orders = JSON.parse(localStorage.getItem('ilya_final_v10') || '[]');
-        orders[index].status = 'УСПІШНО';
-        localStorage.setItem('ilya_final_v10', JSON.stringify(orders));
+    function updateStatus(index, newStatus) {
+        let orders = JSON.parse(localStorage.getItem('ilya_final_v11') || '[]');
+        orders[index].status = newStatus;
+        localStorage.setItem('ilya_final_v11', JSON.stringify(orders));
         renderHistory();
-        tg.HapticFeedback.notificationOccurred('success');
+        
+        if(newStatus === 'УСПІШНО') tg.HapticFeedback.notificationOccurred('success');
+        else tg.HapticFeedback.notificationOccurred('error');
     }
 
     async function goPay() {
         const orderId = Math.floor(Math.random() * 8999) + 1000;
-        const orders = JSON.parse(localStorage.getItem('ilya_final_v10') || '[]');
-        orders.push({ id: orderId, name: document.getElementById('sheet-title').innerText, tariff: currentTariff, price: currentAmount, date: new Date().toLocaleDateString(), status: 'ОБРОБКА' });
-        localStorage.setItem('ilya_final_v10', JSON.stringify(orders));
+        const orders = JSON.parse(localStorage.getItem('ilya_final_v11') || '[]');
+        
+        orders.push({ 
+            id: orderId, 
+            name: document.getElementById('sheet-title').innerText, 
+            tariff: currentTariff, 
+            price: currentAmount, 
+            date: new Date().toLocaleDateString(), 
+            status: 'ОБРОБКА' 
+        });
+        localStorage.setItem('ilya_final_v11', JSON.stringify(orders));
 
-        const text = `🚀 *ЗАМОВЛЕННЯ #${orderId}*\n👤 Юзер: ${user.first_name}\n🆔 ID: \`${user.id}\`\n💰 Сума: ${currentAmount}₴\n📦 Тариф: ${currentTariff}`;
+        const text = `🚀 *НОВЕ ЗАМОВЛЕННЯ #${orderId}*\n👤 Юзер: ${user.first_name}\n🆔 ID: \`${user.id}\`\n💰 Сума: ${currentAmount}₴\n📦 Тариф: ${currentTariff}`;
         
         fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
             method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -213,6 +243,7 @@
     }
 </script>
 </body>
-</html>
+                                                                                                                    </html>
+
 
 
