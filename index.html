@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>IllyaGarant Payments</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    
+    <style>
+        :root {
+            --bg-color: #121214;
+            --secondary-bg: #1c1c1e;
+            --card-bg: #2c2c2e;
+            --accent: #5856d6;
+            --text-main: #ffffff;
+            --text-gray: #8e8e93;
+            --accent-green: #34c759;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, system-ui, sans-serif;
+            margin: 0; padding: 0;
+            min-height: 100vh;
+            overflow-y: auto;
+        }
+
+        body::-webkit-scrollbar { display: none; }
+
+        .container { padding: 16px; padding-bottom: 110px; width: 100%; }
+        h2 { font-size: 26px; font-weight: 800; margin: 0 0 20px 0; letter-spacing: -0.5px; }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+        .card {
+            background: var(--secondary-bg);
+            border-radius: 22px;
+            aspect-ratio: 1 / 1;
+            position: relative;
+            overflow: hidden;
+            border: 1.5px solid var(--accent);
+            transition: transform 0.2s;
+        }
+        .card:active { transform: scale(0.95); }
+        .card img { width: 100%; height: 100%; object-fit: cover; }
+
+        .badge-price {
+            position: absolute; top: 12px; left: 12px;
+            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(10px);
+            padding: 5px 12px; border-radius: 12px; font-size: 12px; font-weight: 800;
+        }
+
+        .badge-title {
+            position: absolute; bottom: 12px; right: 12px;
+            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(10px);
+            padding: 5px 12px; border-radius: 12px; font-size: 13px; font-weight: 700;
+        }
+
+        .nav-bar {
+            position: fixed; bottom: 0; width: 100%;
+            background: rgba(20, 20, 20, 0.85); backdrop-filter: blur(20px);
+            display: flex; justify-content: space-around;
+            padding: 12px 0 32px 0; border-top: 0.5px solid #333; z-index: 100;
+        }
+
+        .nav-item { 
+            background: none; border: none; color: var(--text-gray); 
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
+        }
+        .nav-item.active { color: var(--text-main); }
+        .nav-item.active i { color: var(--accent); transform: scale(1.1); }
+        .nav-item span { font-size: 11px; font-weight: 500; }
+
+        .profile-card { 
+            background: var(--secondary-bg); border-radius: 28px; 
+            padding: 40px 20px; text-align: center; margin-top: 10px;
+            border: 1.5px solid var(--accent);
+        }
+        
+        .profile-avatar {
+            width: 90px; height: 90px; border-radius: 50%; 
+            margin: 0 auto 15px; border: 3px solid var(--accent);
+            object-fit: cover; display: block;
+        }
+
+        .sheet {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color); z-index: 200;
+            display: none; padding: 20px;
+            animation: slideInUp 0.3s ease-out;
+            overflow-y: auto;
+        }
+
+        .tariff-option {
+            background: var(--card-bg); border-radius: 18px; padding: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            border: 1.5px solid transparent; margin-bottom: 12px; transition: 0.2s;
+        }
+
+        .tariff-option.active { border-color: var(--accent); background: rgba(88, 86, 214, 0.1); }
+        
+        .btn-pay {
+            background: var(--accent); color: white; border: none; border-radius: 20px;
+            padding: 22px; width: 100%; font-size: 19px; font-weight: 800; margin-top: 15px;
+        }
+
+        .update-badge {
+            display: inline-block; background: var(--accent-green); color: #000;
+            font-size: 10px; font-weight: 900; padding: 2px 8px; border-radius: 6px;
+            margin-bottom: 8px; text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div id="tab-home" class="container section animate__animated animate__fadeIn">
+        <h2>IllyaGarant Payments</h2>
+        <div class="grid">
+            <div class="card animate__animated animate__zoomIn" onclick="openSheet('Plutonium')">
+                <div class="badge-price">від 150 ₴</div>
+                <img src="https://files.catbox.moe/aum4s7.jpg" alt="Plutonium">
+                <div class="badge-title">Plutonium</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-history" class="container section" style="display:none;">
+        <h2>Історія</h2>
+        <div class="profile-card animate__animated animate__fadeInUp">
+            <i data-lucide="clock" style="width: 40px; height: 40px; margin-bottom: 10px; color: var(--accent);"></i>
+            <p>У вас ще немає покупок.</p>
+        </div>
+    </div>
+
+    <div id="tab-profile" class="container section" style="display:none;">
+        <h2>Профіль</h2>
+        <div class="profile-card animate__animated animate__zoomIn">
+            <img id="u-photo" class="profile-avatar" src="https://via.placeholder.com/90" alt="Avatar">
+            <h3 id="u-name" style="margin: 0;">Користувач</h3>
+            <p id="u-id" style="color: var(--text-gray); font-size: 14px; margin-top: 5px;">ID: 00000000</p>
+        </div>
+    </div>
+
+    <nav class="nav-bar">
+        <button class="nav-item active" onclick="switchTab('home', this)"><i data-lucide="layout-grid"></i><span>Магазин</span></button>
+        <button class="nav-item" onclick="switchTab('history', this)"><i data-lucide="history"></i><span>Історія</span></button>
+        <button class="nav-item" onclick="switchTab('profile', this)"><i data-lucide="user"></i><span>Профіль</span></button>
+    </nav>
+</div>
+
+<div id="pay-sheet" class="sheet">
+    <div onclick="closeSheet()" style="color: var(--accent); font-weight: 700; margin-bottom: 25px; cursor: pointer;">
+        <i data-lucide="chevron-left" style="vertical-align: middle;"></i> Назад
+    </div>
+    
+    <div class="update-badge">ОНОВЛЕНО</div>
+    <h1 id="sheet-title" style="margin: 0; font-size: 30px;">Plutonium</h1>
+    <p style="color: var(--text-gray); margin: 8px 0 25px 0; font-size: 14px; line-height: 1.4;">
+        БЕЗ ROOT!<br>Найпростіше рішення для комфортної гри
+    </p>
+
+    <div class="tariff-option active" onclick="selectT(150, this)"><span>7 днів</span> <b>150 ₴</b></div>
+    <div class="tariff-option" onclick="selectT(300, this)"><span>30 днів</span> <b>300 ₴</b></div>
+    <div class="tariff-option" onclick="selectT(700, this)"><span>90 днів</span> <b>700 ₴</b></div>
+
+    <button class="btn-pay" onclick="goPay()">Оплатити через Mono</button>
+</div>
+
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand();
+    lucide.createIcons();
+
+    let currentAmount = 150;
+    const BOT_TOKEN = "8651326096:AAFBOQ-GPNJKON6KGic81DvxHjH-XDXwYFM";
+    const ADMIN_ID = "1471307057";
+
+    if (tg.initDataUnsafe?.user) {
+        document.getElementById('u-name').innerText = tg.initDataUnsafe.user.first_name;
+        document.getElementById('u-id').innerText = 'ID: ' + tg.initDataUnsafe.user.id;
+        if (tg.initDataUnsafe.user.photo_url) document.getElementById('u-photo').src = tg.initDataUnsafe.user.photo_url;
+    }
+
+    function switchTab(tab, el) {
+        document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+        document.getElementById('tab-' + tab).style.display = 'block';
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        el.classList.add('active');
+        if (tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
+    }
+
+    function openSheet(name) { document.getElementById('pay-sheet').style.display = 'block'; }
+    function closeSheet() { document.getElementById('pay-sheet').style.display = 'none'; }
+    function selectT(amt, el) {
+        currentAmount = amt;
+        document.querySelectorAll('.tariff-option').forEach(o => o.classList.remove('active'));
+        el.classList.add('active');
+    }
+
+    async function goPay() {
+        const user = tg.initDataUnsafe?.user || { first_name: "Гість", id: "0" };
+        const msg = `🔔 *Нове замовлення!*\n👤: ${user.first_name}\n🆔: ${user.id}\n💰: ${currentAmount} ₴`;
+
+        try {
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: ADMIN_ID,
+                    text: msg,
+                    parse_mode: "Markdown",
+                    reply_markup: {
+                        inline_keyboard: [[
+                            { text: "✅ Прийняти", callback_data: `approve_${user.id}_${currentAmount}` },
+                            { text: "❌ Відхилити", callback_data: `reject_${user.id}` }
+                        ]]
+                    }
+                })
+            });
+        } catch (e) {}
+
+        tg.openLink(`https://send.monobank.ua/jar/7bpLBmtzoA?a=${currentAmount}`);
+    }
+</script>
+</body>
+              </html>
+              
