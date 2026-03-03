@@ -17,6 +17,7 @@
             --text-main: #ffffff;
             --text-gray: #a1a1aa;
             --green: #22c55e;
+            --red: #ef4444;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
@@ -51,7 +52,7 @@
         }
         .user-name { font-size: 24px; font-weight: 800; margin: 0; background: linear-gradient(to right, #fff, #a1a1aa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-        /* СІТКА */
+        /* СІТКА МАГАЗИНУ */
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
         .card {
             background: var(--card-bg); border-radius: 28px;
@@ -66,10 +67,10 @@
             padding: 12px; font-size: 12px; font-weight: 800; text-align: center;
         }
 
-        /* МОДАЛКА ТА АНІМАЦІЯ ТАРИФІВ */
+        /* МОДАЛКА */
         .sheet {
             position: fixed; inset: 0; background: var(--bg-grad); z-index: 2000; display: none;
-            padding: 30px; overflow-y: auto; scroll-behavior: smooth;
+            padding: 30px; overflow-y: auto;
         }
         .update-tag {
             background: var(--green); color: #000; font-size: 10px; font-weight: 900; 
@@ -171,6 +172,8 @@
 
     let currentAmount = 150;
     let currentTariff = '7 днів';
+    
+    // ТВОЇ ДАНІ
     const BOT_TOKEN = "8651326096:AAFBOQ-GPNJKON6KGic81DvxHjH-XDXwYFM";
     const ADMIN_ID = "1471307057";
 
@@ -187,6 +190,7 @@
         document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
         el.classList.add('active');
         if(tab === 'history') renderHistory();
+        tg.HapticFeedback.impactOccurred('light');
     }
 
     function openSheet(name) {
@@ -218,44 +222,46 @@
 
     function renderHistory() {
         const list = document.getElementById('history-list');
-        const orders = JSON.parse(localStorage.getItem('ilya_final_orders') || '[]');
+        const orders = JSON.parse(localStorage.getItem('ilya_orders_final') || '[]');
         if(!orders.length) { list.innerHTML = '<p style="text-align:center;color:gray;margin-top:50px;">Історія порожня</p>'; return; }
         list.innerHTML = orders.reverse().map(o => `
             <div class="history-item">
                 <div><b>${o.name}</b><br><small>${o.tariff} • ${o.price}₴</small></div>
-                <div style="text-align:right;"><div style="color:var(--accent);font-size:10px;font-weight:900;">ЧЕК НАДАНО</div><small style="color:gray;">${o.date}</small></div>
+                <div style="text-align:right;"><div style="color:var(--accent);font-size:10px;font-weight:900;">ОБРОБКА</div><small style="color:gray;">${o.date}</small></div>
             </div>
         `).join('');
     }
 
     async function goPay() {
-        const user = tg.initDataUnsafe?.user || { id: 0, first_name: "Гість" };
-        const orderId = Math.floor(Math.random() * 9999);
+        const user = tg.initDataUnsafe?.user || { id: 0, first_name: "Користувач" };
+        const orderId = Math.floor(Math.random() * 8999) + 1000;
         
-        // Збереження історії
-        const orders = JSON.parse(localStorage.getItem('ilya_final_orders') || '[]');
+        // Зберігаємо в історію
+        const orders = JSON.parse(localStorage.getItem('ilya_orders_final') || '[]');
         orders.push({ id: orderId, name: document.getElementById('sheet-title').innerText, tariff: currentTariff, price: currentAmount, date: new Date().toLocaleDateString() });
-        localStorage.setItem('ilya_final_orders', JSON.stringify(orders));
+        localStorage.setItem('ilya_orders_final', JSON.stringify(orders));
 
-        // Відправка адміну (Кратко для кнопок!)
-        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        // Посилання для адміна (щоб він міг відповісти тобі без скрипта)
+        // t.me/ТВОЙ_БОТ?start=ok_USERID_ORDERID
+        const botName = "ТВІЙ_ЮЗЕРНЕЙМ_БОТА"; // ЗАМІНИ НА ЮЗЕРНЕЙМ БОТА БЕЗ @
+        
+        const text = `🚀 *ЗАМОВЛЕННЯ #${orderId}*\n\n👤 Юзер: ${user.first_name}\n🆔 ID: \`${user.id}\`\n💰 Сума: ${currentAmount}₴\n📦 Тариф: ${currentTariff}\n\nЩоб відповісти клієнту, скопіюй його ID та надішли повідомлення через свого бота.`;
+
+        // Відправка адміну
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
                 chat_id: ADMIN_ID,
-                text: `🚀 *НОВЕ ЗАМОВЛЕННЯ*\n👤 Юзер: ${user.first_name}\n🆔 ID: ${user.id}\n💰 Сума: ${currentAmount}₴\n📦 Тариф: ${currentTariff}`,
-                parse_mode: "Markdown",
-                reply_markup: {
-                    inline_keyboard: [[
-                        { text: "✅ ПРИЙНЯТИ", callback_data: `ok_${user.id}_${orderId}` },
-                        { text: "❌ ВІДХИЛИТИ", callback_data: `no_${user.id}_${orderId}` }
-                    ]]
-                }
+                text: text,
+                parse_mode: "Markdown"
             })
         });
 
+        // Відкриваємо оплату
         tg.openLink(`https://send.monobank.ua/jar/7bpLBmtzoA?a=${currentAmount}`);
     }
 </script>
 </body>
 </html>
+
