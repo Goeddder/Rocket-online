@@ -71,8 +71,9 @@
         .nav-item { 
             background: none; border: none; color: var(--text-gray); 
             display: flex; flex-direction: column; align-items: center; gap: 6px;
+            transition: 0.3s;
         }
-        .nav-item.active { color: var(--text-main); }
+        .nav-item.active { color: var(--text-main); transform: translateY(-2px); }
         .nav-item.active i { color: var(--accent); transform: scale(1.1); }
         .nav-item span { font-size: 11px; font-weight: 500; }
 
@@ -83,7 +84,7 @@
         }
         
         .profile-avatar {
-            width: 90px; height: 90px; border-radius: 50%; 
+            width: 100px; height: 100px; border-radius: 50%; 
             margin: 0 auto 15px; border: 3px solid var(--accent);
             object-fit: cover; display: block;
         }
@@ -92,7 +93,7 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--bg-color); z-index: 200;
             display: none; padding: 20px;
-            animation: slideInUp 0.3s ease-out;
+            animation: slideInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             overflow-y: auto;
         }
 
@@ -101,12 +102,11 @@
             display: flex; justify-content: space-between; align-items: center;
             border: 1.5px solid transparent; margin-bottom: 12px; transition: 0.2s;
         }
-
         .tariff-option.active { border-color: var(--accent); background: rgba(88, 86, 214, 0.1); }
         
         .btn-pay {
             background: var(--accent); color: white; border: none; border-radius: 20px;
-            padding: 22px; width: 100%; font-size: 19px; font-weight: 800; margin-top: 15px;
+            padding: 22px; width: 100%; font-size: 19px; font-weight: 800; margin-top: 20px;
         }
 
         .update-badge {
@@ -114,60 +114,66 @@
             font-size: 10px; font-weight: 900; padding: 2px 8px; border-radius: 6px;
             margin-bottom: 8px; text-transform: uppercase;
         }
+
+        /* Стилі Історії */
+        .history-item {
+            background: var(--secondary-bg); border: 1.5px solid var(--accent);
+            border-radius: 20px; padding: 18px; margin-bottom: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            animation: fadeInRight 0.5s ease;
+        }
+        .status-badge {
+            font-size: 10px; padding: 5px 10px; border-radius: 8px;
+            text-transform: uppercase; font-weight: 900; background: #ffcc00; color: #000;
+        }
     </style>
 </head>
 <body>
 
 <div id="app">
     <div id="tab-home" class="container section animate__animated animate__fadeIn">
-        <h2>IllyaGarant Payments</h2>
+        <h2>Магазин</h2>
         <div class="grid">
             <div class="card animate__animated animate__zoomIn" onclick="openSheet('Plutonium')">
                 <div class="badge-price">від 150 ₴</div>
-                <img src="https://files.catbox.moe/aum4s7.jpg" alt="Plutonium">
+                <img src="https://files.catbox.moe/aum4s7.jpg">
                 <div class="badge-title">Plutonium</div>
             </div>
         </div>
     </div>
 
     <div id="tab-history" class="container section" style="display:none;">
-        <h2>Історія</h2>
-        <div class="profile-card animate__animated animate__fadeInUp">
-            <i data-lucide="clock" style="width: 40px; height: 40px; margin-bottom: 10px; color: var(--accent);"></i>
-            <p>У вас ще немає покупок.</p>
-        </div>
+        <h2>Мої покупки</h2>
+        <div id="history-list"></div>
     </div>
 
     <div id="tab-profile" class="container section" style="display:none;">
         <h2>Профіль</h2>
         <div class="profile-card animate__animated animate__zoomIn">
-            <img id="u-photo" class="profile-avatar" src="https://via.placeholder.com/90" alt="Avatar">
-            <h3 id="u-name" style="margin: 0;">Користувач</h3>
-            <p id="u-id" style="color: var(--text-gray); font-size: 14px; margin-top: 5px;">ID: 00000000</p>
+            <img id="u-photo" class="profile-avatar" src="https://via.placeholder.com/100">
+            <h3 id="u-name" style="margin: 0; font-size: 22px;">Користувач</h3>
+            <p id="u-id" style="color: var(--text-gray); margin-top: 8px; font-size: 14px;">ID: 00000000</p>
         </div>
     </div>
 
     <nav class="nav-bar">
-        <button class="nav-item active" onclick="switchTab('home', this)"><i data-lucide="layout-grid"></i><span>Магазин</span></button>
+        <button class="nav-item active" onclick="switchTab('home', this)"><i data-lucide="shopping-bag"></i><span>Магазин</span></button>
         <button class="nav-item" onclick="switchTab('history', this)"><i data-lucide="history"></i><span>Історія</span></button>
         <button class="nav-item" onclick="switchTab('profile', this)"><i data-lucide="user"></i><span>Профіль</span></button>
     </nav>
 </div>
 
 <div id="pay-sheet" class="sheet">
-    <div onclick="closeSheet()" style="color: var(--accent); font-weight: 700; margin-bottom: 25px; cursor: pointer;">
-        <i data-lucide="chevron-left" style="vertical-align: middle;"></i> Назад
+    <div onclick="closeSheet()" style="color: var(--accent); font-weight: 700; cursor: pointer;"><i data-lucide="chevron-left"></i> Назад</div>
+    <div style="margin: 25px 0;">
+        <div class="update-badge">ОНОВЛЕНО</div>
+        <h1 id="sheet-title" style="margin: 0; font-size: 32px;">Софт</h1>
+        <p style="color: var(--text-gray); margin-top: 8px;">Кращий функціонал на ринку.</p>
     </div>
-    
-    <div class="update-badge">ОНОВЛЕНО</div>
-    <h1 id="sheet-title" style="margin: 0; font-size: 30px;">Plutonium</h1>
-    <p style="color: var(--text-gray); margin: 8px 0 25px 0; font-size: 14px; line-height: 1.4;">
-        БЕЗ ROOT!<br>Найпростіше рішення для комфортної гри
-    </p>
 
-    <div class="tariff-option active" onclick="selectT(150, this)"><span>7 днів</span> <b>150 ₴</b></div>
-    <div class="tariff-option" onclick="selectT(300, this)"><span>30 днів</span> <b>300 ₴</b></div>
-    <div class="tariff-option" onclick="selectT(700, this)"><span>90 днів</span> <b>700 ₴</b></div>
+    <div class="tariff-option active" onclick="selectT(150, this, '7 днів')"><span>7 днів</span> <b>150 ₴</b></div>
+    <div class="tariff-option" onclick="selectT(300, this, '30 днів')"><span>30 днів</span> <b>300 ₴</b></div>
+    <div class="tariff-option" onclick="selectT(700, this, '90 днів')"><span>90 днів</span> <b>700 ₴</b></div>
 
     <button class="btn-pay" onclick="goPay()">Оплатити через Mono</button>
 </div>
@@ -179,13 +185,15 @@
     lucide.createIcons();
 
     let currentAmount = 150;
+    let currentTariff = '7 днів';
     const BOT_TOKEN = "8651326096:AAFBOQ-GPNJKON6KGic81DvxHjH-XDXwYFM";
     const ADMIN_ID = "1471307057";
 
     if (tg.initDataUnsafe?.user) {
-        document.getElementById('u-name').innerText = tg.initDataUnsafe.user.first_name;
-        document.getElementById('u-id').innerText = 'ID: ' + tg.initDataUnsafe.user.id;
-        if (tg.initDataUnsafe.user.photo_url) document.getElementById('u-photo').src = tg.initDataUnsafe.user.photo_url;
+        const user = tg.initDataUnsafe.user;
+        document.getElementById('u-name').innerText = user.first_name;
+        document.getElementById('u-id').innerText = 'ID: ' + user.id;
+        if (user.photo_url) document.getElementById('u-photo').src = user.photo_url;
     }
 
     function switchTab(tab, el) {
@@ -193,42 +201,74 @@
         document.getElementById('tab-' + tab).style.display = 'block';
         document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
         el.classList.add('active');
+        if (tab === 'history') renderHistory();
         if (tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
     }
 
-    function openSheet(name) { document.getElementById('pay-sheet').style.display = 'block'; }
+    function openSheet(name) { 
+        document.getElementById('pay-sheet').style.display = 'block'; 
+        document.getElementById('sheet-title').innerText = name;
+    }
     function closeSheet() { document.getElementById('pay-sheet').style.display = 'none'; }
-    function selectT(amt, el) {
+
+    function selectT(amt, el, tName) {
         currentAmount = amt;
+        currentTariff = tName;
         document.querySelectorAll('.tariff-option').forEach(o => o.classList.remove('active'));
         el.classList.add('active');
     }
 
+    function addToHistory(name, tariff, price) {
+        let history = JSON.parse(localStorage.getItem('orders_v2') || '[]');
+        history.push({ name, tariff, price, date: new Date().toLocaleDateString() });
+        localStorage.setItem('orders_v2', JSON.stringify(history));
+    }
+
+    function renderHistory() {
+        const list = document.getElementById('history-list');
+        const orders = JSON.parse(localStorage.getItem('orders_v2') || '[]');
+        if (orders.length === 0) {
+            list.innerHTML = '<p style="text-align:center; color:gray; margin-top:50px; font-size: 14px;">У вас ще немає покупок</p>';
+            return;
+        }
+        list.innerHTML = orders.reverse().map(o => `
+            <div class="history-item animate__animated animate__fadeInRight">
+                <div>
+                    <div style="font-weight:700; font-size: 17px;">${o.name}</div>
+                    <div style="font-size:13px; color:var(--text-gray); margin-top:4px;">${o.tariff} • ${o.price} ₴</div>
+                </div>
+                <div class="status-badge">Очікується</div>
+            </div>
+        `).join('');
+    }
+
     async function goPay() {
         const user = tg.initDataUnsafe?.user || { first_name: "Гість", id: "0" };
-        const msg = `🔔 *Нове замовлення!*\n👤: ${user.first_name}\n🆔: ${user.id}\n💰: ${currentAmount} ₴`;
+        const sTitle = document.getElementById('sheet-title').innerText;
+        addToHistory(sTitle, currentTariff, currentAmount);
 
-        try {
-            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    chat_id: ADMIN_ID,
-                    text: msg,
-                    parse_mode: "Markdown",
-                    reply_markup: {
-                        inline_keyboard: [[
-                            { text: "✅ Прийняти", callback_data: `approve_${user.id}_${currentAmount}` },
-                            { text: "❌ Відхилити", callback_data: `reject_${user.id}` }
-                        ]]
-                    }
-                })
-            });
-        } catch (e) {}
+        const msg = `🔔 *Нове замовлення!*\n👤: ${user.first_name}\n🆔: ${user.id}\n📦: ${sTitle}\n⏳: ${currentTariff}\n💰: ${currentAmount} ₴`;
+
+        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: ADMIN_ID,
+                text: msg,
+                parse_mode: "Markdown",
+                reply_markup: {
+                    inline_keyboard: [[
+                        { text: "✅ Прийняти", callback_data: `confirm_${user.id}_${currentAmount}` },
+                        { text: "❌ Відхилити", callback_data: `cancel_${user.id}` }
+                    ]]
+                }
+            })
+        });
 
         tg.openLink(`https://send.monobank.ua/jar/7bpLBmtzoA?a=${currentAmount}`);
     }
 </script>
 </body>
-              </html>
+</html>
+
               
