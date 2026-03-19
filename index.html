@@ -174,34 +174,7 @@
         }
         .btn-approve { background: var(--green); color: black; }
         .btn-reject { background: var(--red); color: white; }
-
-        .crypto-info {
-            background: rgba(139, 92, 246, 0.1);
-            border: 1px solid var(--accent);
-            border-radius: 20px;
-            padding: 20px;
-            margin: 20px 0;
-            text-align: center;
-        }
-        .crypto-address {
-            background: rgba(0,0,0,0.3);
-            padding: 15px;
-            border-radius: 15px;
-            font-family: monospace;
-            font-size: 14px;
-            margin: 10px 0;
-            word-break: break-all;
-        }
-        .copy-btn {
-            background: var(--accent);
-            border: none;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 15px;
-            font-weight: 700;
-            cursor: pointer;
-            margin-top: 10px;
-        }
+        .btn-deliver { background: var(--accent); color: white; }
 
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(100%); }
@@ -272,13 +245,6 @@
         </div>
     </div>
 
-    <div id="crypto-info" class="crypto-info" style="display: none;">
-        <i data-lucide="info" style="margin-bottom: 10px;"></i>
-        <p>Оплата через CryptoBot</p>
-        <div class="crypto-address" id="crypto-address">USDT (TRC20)</div>
-        <button class="copy-btn" onclick="copyAddress()">СКОПІЮВАТИ АДРЕСУ</button>
-    </div>
-
     <div class="total-price">
         <div style="font-size:12px; color:var(--text-gray); margin-bottom:10px; font-weight:800;">ДО ОПЛАТИ</div>
         <span style="font-size:42px; font-weight:950;" id="total-price">0</span> <span style="font-size:24px; font-weight:700;" id="currency">грн</span>
@@ -288,6 +254,35 @@
     <div style="height: 50px;"></div>
 </div>
 
+<!-- ЕКРАН ВИДАЧІ ТОВАРУ -->
+<div id="delivery-sheet" class="sheet">
+    <div class="btn-back" onclick="closeDeliverySheet()"><i data-lucide="arrow-left"></i> НАЗАД</div>
+    
+    <h2 style="margin-bottom: 20px;">Видача товару</h2>
+    
+    <div class="input-group">
+        <label>ID ЗАМОВЛЕННЯ</label>
+        <input type="text" id="delivery-order-id" readonly>
+    </div>
+    
+    <div class="input-group">
+        <label>ІНФОРМАЦІЯ ПРО КЛІЄНТА</label>
+        <div id="delivery-client-info" style="color: var(--text-gray); font-size: 14px; padding: 10px 0;"></div>
+    </div>
+    
+    <div class="input-group">
+        <label>ФАЙЛ (file_id)</label>
+        <input type="text" id="delivery-file" placeholder="Введіть file_id">
+    </div>
+    
+    <div class="input-group">
+        <label>КЛЮЧ АКТИВАЦІЇ</label>
+        <input type="text" id="delivery-key" placeholder="Введіть ключ">
+    </div>
+    
+    <button class="btn-pay" onclick="sendDelivery()" style="margin-top: 20px;">✅ ВІДПРАВИТИ КЛІЄНТУ</button>
+</div>
+
 <script>
     const tg = window.Telegram.WebApp;
     tg.ready(); tg.expand(); 
@@ -295,12 +290,12 @@
     const BOT_TOKEN = "8522948833:AAFPgQz77GDY2YafZRtNMM9ilcxZ65_2wus";
     const ADMIN_ID = 1471307057;
     const CARD_NUMBER = "4441111008011946";
-    const CRYPTO_ADDRESS = "UQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJKZ";
+    const CRYPTO_TOKEN = "466345:AADMm3mzlC6KGJmwt3r771bUPIx40CMEKhQ";
+    const CRYPTO_API = "https://pay.crypt.bot/api";
 
     const user = tg.initDataUnsafe?.user || { id: 777, first_name: "Гість" };
     const isAdmin = user.id === ADMIN_ID;
 
-    // Чити з нашого бота
     const cheats = [
         {
             id: 'plutonium',
@@ -369,7 +364,7 @@
     document.getElementById('u-id').innerText = 'ID: ' + user.id;
     if(user.photo_url) document.getElementById('u-photo').src = user.photo_url;
 
-    // Адмін-кнопка
+    // Додаємо кнопку адміна якщо треба
     if(isAdmin) {
         const navBar = document.querySelector('.nav-bar');
         const adminBtn = document.createElement('button');
@@ -379,7 +374,6 @@
         navBar.appendChild(adminBtn);
     }
 
-    // Завантаження ігор
     function loadGames() {
         const grid = document.getElementById('games-grid');
         grid.innerHTML = '';
@@ -423,15 +417,13 @@
         const priceList = document.getElementById('price-list');
         priceList.innerHTML = '';
         
-        const isSo2 = currentCheat.id === 'plutonium';
-        
         for(const [days, price] of Object.entries(currentCheat.prices)) {
             const row = document.createElement('div');
             row.className = 'price-row';
             row.setAttribute('onclick', `selectDays('${days}')`);
             
             let priceText = '';
-            if(isSo2) {
+            if(currentCheat.id === 'plutonium') {
                 priceText = `${price.uah} грн / ${price.usd}$`;
             } else {
                 priceText = `${price} грн`;
@@ -456,9 +448,8 @@
         paymentMethod = method;
         document.getElementById('pay-card').classList.toggle('active', method === 'card');
         document.getElementById('pay-crypto').classList.toggle('active', method === 'crypto');
-        document.getElementById('crypto-info').style.display = method === 'crypto' ? 'block' : 'none';
         
-        const currency = method === 'card' ? 'грн' : 'USDT';
+        const currency = method === 'card' ? 'грн' : '$';
         document.getElementById('currency').innerText = currency;
         updateTotal();
     }
@@ -478,38 +469,123 @@
         document.getElementById('total-price').innerText = total;
     }
 
-    function copyAddress() {
-        navigator.clipboard.writeText(CRYPTO_ADDRESS);
-        tg.showAlert('✅ Адресу скопійовано!');
-    }
-
     function closeSheet() { 
         document.getElementById('pay-sheet').classList.remove('active');
         setTimeout(() => { document.getElementById('pay-sheet').style.display = 'none'; }, 400);
     }
 
+    function closeDeliverySheet() {
+        document.getElementById('delivery-sheet').classList.remove('active');
+        setTimeout(() => { document.getElementById('delivery-sheet').style.display = 'none'; }, 400);
+    }
+
+    async function createCryptoInvoice() {
+        if(!selectedDays || !currentCheat) return;
+        
+        const amount = currentCheat.id === 'plutonium' 
+            ? currentCheat.prices[selectedDays].usd
+            : currentCheat.prices[selectedDays];
+        
+        const tag = document.getElementById('p-tag').value.trim();
+        if(!tag) return tg.showAlert("Введіть ваш нікнейм!");
+        
+        const orderId = 'ORD' + Date.now().toString().slice(-8);
+        
+        try {
+            const response = await fetch(`${CRYPTO_API}/createInvoice`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Crypto-Pay-API-Token': CRYPTO_TOKEN
+                },
+                body: JSON.stringify({
+                    asset: 'USDT',
+                    amount: amount,
+                    description: `${currentCheat.name} - ${selectedDays} днів`,
+                    paid_btn_name: 'openBot',
+                    paid_btn_url: `https://t.me/PlutoniumfilesBot`,
+                    payload: `${user.id}|${selectedDays}|${currentCheat.id}`
+                })
+            });
+            
+            const data = await response.json();
+            
+            if(data.ok && data.result) {
+                const invoice = data.result;
+                
+                const order = {
+                    id: orderId,
+                    cheat: currentCheat.name,
+                    cheatId: currentCheat.id,
+                    days: selectedDays,
+                    price: amount,
+                    currency: 'USD',
+                    tag: tag,
+                    status: 'pending',
+                    userId: user.id,
+                    userName: user.first_name,
+                    paymentMethod: 'crypto',
+                    invoiceId: invoice.invoice_id,
+                    timestamp: new Date().toISOString()
+                };
+
+                let history = JSON.parse(localStorage.getItem('plutonium_orders') || '[]');
+                history.push(order);
+                localStorage.setItem('plutonium_orders', JSON.stringify(history));
+
+                tg.openLink(invoice.pay_url);
+                
+                const msg = `🆕 *КРИПТО-ЗАМОВЛЕННЯ #${orderId}*\n\n` +
+                    `👤 Клієнт: ${user.first_name} (ID: ${user.id})\n` +
+                    `🎮 Чит: ${currentCheat.name}\n` +
+                    `📅 Період: ${selectedDays} дн.\n` +
+                    `🆔 Нік: \`${tag}\`\n` +
+                    `💰 Сума: ${amount} USDT\n` +
+                    `💳 Спосіб: CryptoBot`;
+
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ chat_id: ADMIN_ID, text: msg, parse_mode: "Markdown" })
+                });
+                
+                tg.showAlert(`✅ Замовлення #${orderId} створено! Перейдіть за посиланням для оплати.`);
+                closeSheet();
+            } else {
+                tg.showAlert("Помилка створення рахунку. Спробуйте пізніше.");
+            }
+        } catch (error) {
+            console.error('CryptoBot error:', error);
+            tg.showAlert("Помилка з'єднання з CryptoBot");
+        }
+    }
+
     async function sendOrder() {
+        if(paymentMethod === 'crypto') {
+            await createCryptoInvoice();
+            return;
+        }
+        
         const tag = document.getElementById('p-tag').value.trim();
         if(!tag) return tg.showAlert("Введіть ваш нікнейм!");
         if(!selectedDays) return tg.showAlert("Виберіть період!");
 
         const price = currentCheat.prices[selectedDays];
-        const total = currentCheat.id === 'plutonium' 
-            ? (paymentMethod === 'card' ? price.uah : price.usd)
-            : price;
+        const total = currentCheat.id === 'plutonium' ? price.uah : price;
 
         const orderId = 'ORD' + Date.now().toString().slice(-8);
         const order = {
             id: orderId,
             cheat: currentCheat.name,
+            cheatId: currentCheat.id,
             days: selectedDays,
             price: total,
-            currency: paymentMethod === 'card' ? 'UAH' : 'USD',
+            currency: 'UAH',
             tag: tag,
             status: 'pending',
             userId: user.id,
             userName: user.first_name,
-            paymentMethod: paymentMethod,
+            paymentMethod: 'card',
             timestamp: new Date().toISOString()
         };
 
@@ -517,26 +593,21 @@
         history.push(order);
         localStorage.setItem('plutonium_orders', JSON.stringify(history));
 
-        let msg = `🆕 *НОВЕ ЗАМОВЛЕННЯ*\n\n`;
-        msg += `🆔 ID: ${orderId}\n`;
-        msg += `👤 Клієнт: ${user.first_name} (ID: ${user.id})\n`;
-        msg += `🎮 Чит: ${currentCheat.name}\n`;
-        msg += `📅 Період: ${selectedDays} дн.\n`;
-        msg += `🆔 Нік: \`${tag}\`\n`;
-        msg += `💰 Сума: ${total} ${paymentMethod === 'card' ? 'грн' : 'USDT'}\n`;
-        msg += `💳 Спосіб: ${paymentMethod === 'card' ? 'Банківська картка' : 'CryptoBot'}`;
+        const msg = `🆕 *ЗАМОВЛЕННЯ #${orderId}*\n\n` +
+            `👤 Клієнт: ${user.first_name} (ID: ${user.id})\n` +
+            `🎮 Чит: ${currentCheat.name}\n` +
+            `📅 Період: ${selectedDays} дн.\n` +
+            `🆔 Нік: \`${tag}\`\n` +
+            `💰 Сума: ${total} грн\n` +
+            `💳 Спосіб: Банківська картка`;
 
         await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
             method: 'POST', headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ chat_id: ADMIN_ID, text: msg, parse_mode: "Markdown" })
         });
 
-        if(paymentMethod === 'card') {
-            tg.openLink(`https://send.monobank.ua/jar/7bpLBmtzoA?a=${total * 100}`);
-            tg.showAlert(`✅ Замовлення #${orderId} створено!\nКартка: ${CARD_NUMBER}\nКоментар: За цифрові товари`);
-        } else {
-            tg.showAlert(`✅ Замовлення #${orderId} створено!\n\nАдреса USDT (TRC20):\n${CRYPTO_ADDRESS}\n\nПісля оплати надішліть скріншот адміну.`);
-        }
+        tg.openLink(`https://send.monobank.ua/jar/7bpLBmtzoA?a=${total * 100}`);
+        tg.showAlert(`✅ Замовлення #${orderId} створено!\nКартка: ${CARD_NUMBER}\nКоментар: За цифрові товари`);
 
         closeSheet();
     }
@@ -573,6 +644,71 @@
         }).join('');
     }
 
+    function openDeliverySheet(order) {
+        document.getElementById('delivery-order-id').value = order.id;
+        document.getElementById('delivery-client-info').innerHTML = 
+            `👤 ${order.userName} (ID: ${order.userId})<br>` +
+            `🎮 ${order.cheat} - ${order.days} дн.<br>` +
+            `🆔 ${order.tag}`;
+        document.getElementById('delivery-sheet').style.display = 'block';
+        document.getElementById('delivery-sheet').classList.add('active');
+    }
+
+    async function sendDelivery() {
+        const orderId = document.getElementById('delivery-order-id').value;
+        const fileId = document.getElementById('delivery-file').value.trim();
+        const key = document.getElementById('delivery-key').value.trim();
+        
+        if(!fileId || !key) return tg.showAlert("Введіть файл і ключ!");
+
+        let orders = JSON.parse(localStorage.getItem('plutonium_orders') || '[]');
+        const orderIndex = orders.findIndex(o => o.id === orderId);
+        
+        if(orderIndex === -1) return tg.showAlert("Замовлення не знайдено!");
+
+        const order = orders[orderIndex];
+        
+        // Відправляємо файл
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ 
+                chat_id: order.userId, 
+                document: fileId,
+                caption: `🔑 *КЛЮЧ АКТИВАЦІЇ:* \`${key}\``,
+                parse_mode: "Markdown"
+            })
+        });
+
+        // Відправляємо повідомлення
+        const userMsg = `✅ *ВАШЕ ЗАМОВЛЕННЯ #${orderId} ГОТОВЕ!*\n\n` +
+            `🎮 Чит: ${order.cheat}\n` +
+            `📅 Період: ${order.days} дн.\n` +
+            `🔑 Ключ: \`${key}\`\n\n` +
+            `Дякуємо за покупку в Plutonium Store! ❤️`;
+
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ 
+                chat_id: order.userId, 
+                text: userMsg, 
+                parse_mode: "Markdown" 
+            })
+        });
+
+        order.status = 'approved';
+        orders[orderIndex] = order;
+        localStorage.setItem('plutonium_orders', JSON.stringify(orders));
+
+        document.getElementById('delivery-file').value = '';
+        document.getElementById('delivery-key').value = '';
+        
+        tg.showAlert("✅ Товар відправлено клієнту!");
+        closeDeliverySheet();
+        renderAdminOrders();
+    }
+
     function renderAdminOrders() {
         const list = document.getElementById('admin-orders');
         const orders = JSON.parse(localStorage.getItem('plutonium_orders') || '[]').reverse();
@@ -583,9 +719,10 @@
         }
         
         list.innerHTML = orders.map((o, idx) => {
-            const realIdx = orders.length - 1 - idx;
             const statusClass = o.status === 'approved' ? 'approved' : 
                               o.status === 'rejected' ? 'rejected' : 'pending';
+            const statusText = o.status === 'approved' ? '✅ Підтверджено' : 
+                             o.status === 'rejected' ? '❌ Відхилено' : '⏳ Очікує';
             
             return `
                 <div class="order-card ${statusClass}">
@@ -597,42 +734,41 @@
                         👤 ${o.userName} (ID: ${o.userId})<br>
                         📅 ${o.days} дн. • 💰 ${o.price} ${o.currency}<br>
                         🆔 ${o.tag}<br>
-                        💳 ${o.paymentMethod === 'card' ? 'Картка' : 'CryptoBot'}
+                        💳 ${o.paymentMethod === 'card' ? 'Картка' : 'CryptoBot'}<br>
+                        📊 ${statusText}
                     </div>
                     ${o.status === 'pending' ? `
                         <div class="order-actions">
-                            <button class="btn-approve" onclick="updateOrderStatus(${realIdx}, 'approved')">✅ Підтвердити</button>
-                            <button class="btn-reject" onclick="updateOrderStatus(${realIdx}, 'rejected')">❌ Відхилити</button>
+                            <button class="btn-deliver" onclick='openDeliverySheet(${JSON.stringify(o).replace(/'/g, "\\'")})'>📦 ВИДАТИ ТОВАР</button>
+                            <button class="btn-reject" onclick="rejectOrder('${o.id}')">❌ ВІДХИЛИТИ</button>
                         </div>
-                    ` : `
-                        <div style="text-align:center; font-size:12px; color:var(--text-gray);">
-                            ${o.status === 'approved' ? '✅ Підтверджено' : '❌ Відхилено'}
-                        </div>
-                    `}
+                    ` : ''}
                 </div>
             `;
         }).join('');
     }
 
-    async function updateOrderStatus(idx, status) {
+    async function rejectOrder(orderId) {
         let orders = JSON.parse(localStorage.getItem('plutonium_orders') || '[]');
-        const order = orders[idx];
-        if(!order) return;
+        const orderIndex = orders.findIndex(o => o.id === orderId);
         
-        order.status = status;
+        if(orderIndex === -1) return;
+        
+        orders[orderIndex].status = 'rejected';
         localStorage.setItem('plutonium_orders', JSON.stringify(orders));
-
-        const userMsg = status === 'approved' 
-            ? `✅ Ваше замовлення #${order.id} підтверджено! Товар вже на вашому акаунті.`
-            : `❌ Ваше замовлення #${order.id} відхилено. Можливо, платіж не знайдено.`;
-
+        
         await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ chat_id: order.userId, text: userMsg })
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ 
+                chat_id: orders[orderIndex].userId, 
+                text: `❌ *ЗАМОВЛЕННЯ #${orderId} ВІДХИЛЕНО*\n\nПлатіж не знайдено. Спробуйте ще раз.`,
+                parse_mode: "Markdown" 
+            })
         });
-
+        
         renderAdminOrders();
-        tg.HapticFeedback.notificationOccurred('success');
+        tg.HapticFeedback.notificationOccurred('error');
     }
 
     loadGames();
@@ -640,4 +776,5 @@
 </script>
 </body>
 </html>
-     
+            
+      
