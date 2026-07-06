@@ -1,52 +1,48 @@
-import asyncio
 import logging
-from aiogram import Bot, Dispatcher, F
-from aiogram.types import CallbackQuery
+from aiogram import Bot, Dispatcher, types
+from aiogram.filters import CommandStart
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.types import WebAppInfo
 
-API_TOKEN = "8651326096:AAFBOQ-GPNJKON6KGic81DvxHjH-XDXwYFM"
+# Включаем логирование, чтобы видеть ошибки в консоли
 logging.basicConfig(level=logging.INFO)
 
-bot = Bot(token=API_TOKEN)
+# ⚠️ ЗАМЕНИ ЭТОТ ТОКЕН НА СВОЙ ИЗ @BotFather
+BOT_TOKEN = "8795840281:AAG5fhG8AZgssDN92kpdTMGDnhPq9yiYhWE"
+WEB_APP_URL = "https://rocket-online.vercel.app/"
+
+bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
-# Обробка кнопки ПРИЙНЯТИ
-@dp.callback_query(F.data.startswith("ok_"))
-async def handle_ok(callback: CallbackQuery):
-    try:
-        # Дані: ok_USERID_ORDERID
-        parts = callback.data.split("_")
-        user_id = int(parts[1])
-        order_id = parts[2]
-
-        # Оновлюємо чат адміна
-        await callback.message.edit_text(f"{callback.message.text}\n\n✅ **ПІДТВЕРДЖЕНО АДМІНІСТРАТОРОМ**")
-        
-        # Шлемо юзеру повідомлення
-        await bot.send_message(user_id, f"✅ Ваша оплата замовлення #{order_id} підтверджена! Дякуємо за покупку.")
-        await callback.answer("Успішно підтверджено!")
-        
-    except Exception as e:
-        await callback.answer(f"Помилка: Користувач не запустив бота!", show_alert=True)
-
-# Обробка кнопки ВІДХИЛИТИ
-@dp.callback_query(F.data.startswith("no_"))
-async def handle_no(callback: CallbackQuery):
-    try:
-        parts = callback.data.split("_")
-        user_id = int(parts[1])
-        
-        await callback.message.edit_text(f"{callback.message.text}\n\n❌ **ВІДХИЛЕНО**")
-        await bot.send_message(user_id, "❌ Ваша оплата була відхилена адміністратором. Зв'яжіться з підтримкою.")
-        await callback.answer("Відхилено")
-    except Exception as e:
-        await callback.answer("Помилка при відхиленні", show_alert=True)
+@dp.message(CommandStart())
+async def cmd_start(message: types.Message):
+    # Создаем инлайн-кнопку для запуска Web App
+    kb = InlineKeyboardBuilder()
+    kb.button(
+        text="🛒 Открыть магазин",
+        web_app=WebAppInfo(url=WEB_APP_URL)
+    )
+    
+    # Текст приветствия
+    welcome_text = (
+        "👋 **Приветствуем в Oxide: Survival Island Shop!**\n\n"
+        "🔥 Мы рады приветствовать тебя в нашем **официальном магазине игрового доната**!\n\n"
+        "Здесь ты можешь быстро, безопасно и без лишних переплат приобрести:\n"
+        "• Наборы монет (Coin Packs)\n"
+        "• Наборы билетов\n"
+        "• Монеты Боевого Пропуска\n"
+        "• Premium статус и VIP привилегии\n\n"
+        "⚡️ Весь донат начисляется автоматически по твоему Player ID.\n\n"
+        "Жми кнопку ниже, чтобы перейти к ассортименту! 👇"
+    )
+    
+    # Отправляем сообщение с поддержкой Markdown разметки
+    await message.answer(welcome_text, reply_markup=kb.as_markup(), parse_mode="Markdown")
 
 async def main():
-    print("💎 Адмін-бот IllyaGarant запущений!")
-    await bot.delete_webhook(drop_pending_updates=True)
+    print("Бот успешно запущен и готов к работе!")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
+    import asyncio
     asyncio.run(main())
-    
-        
