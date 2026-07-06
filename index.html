@@ -1,795 +1,946 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Plutonium Store</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oxide: Survival Island Shop</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-    
     <style>
         :root {
-            --bg-grad: radial-gradient(circle at top, #1a1a1e 0%, #050505 100%);
-            --card-bg: rgba(30, 30, 35, 0.7);
-            --accent: #8b5cf6;
-            --accent-glow: rgba(139, 92, 246, 0.4);
-            --text-main: #ffffff;
-            --text-gray: #94a3b8;
-            --green: #10b981;
-            --red: #ef4444;
-            --yellow: #f59e0b;
+            --bg-gradient: linear-gradient(180deg, #18150c 0%, #0d0c0a 50%, #050505 100%);
+            --card-bg: #1e1d1a;
+            --modal-bg: #2b2a26;
+            --card-border: #333027;
+            --accent-yellow: #ffcc00; 
+            --text-color: #ffffff;
+            --text-muted: #c2bebc;
+            --input-bg: #272521;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-        
+        html { scroll-behavior: smooth; }
+
         body {
-            background: var(--bg-grad); color: var(--text-main);
-            font-family: 'Inter', -apple-system, sans-serif; margin: 0; padding: 0;
-            min-height: 100vh; overflow: hidden;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-color);
+            margin: 0;
+            padding: 15px;
+            min-height: 100vh;
+            box-sizing: border-box;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
-        .container { 
-            padding: 25px 20px 140px 20px; 
-            height: 100vh; overflow-y: auto; 
-            display: none; 
-        }
-        .container.active { display: block; }
-        
-        h2 { font-size: 28px; font-weight: 900; margin-bottom: 25px; letter-spacing: -1px; }
-
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-        .card {
-            background: var(--card-bg); border-radius: 28px; position: relative; overflow: hidden; 
-            border: 1px solid rgba(255,255,255,0.05); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-            aspect-ratio: 0.9 / 1; cursor: pointer;
-        }
-        .card:active { transform: scale(0.92); }
-        .card img { width: 100%; height: 100%; object-fit: cover; }
-        .card-info { 
-            position: absolute; bottom: 0; left: 0; right: 0; 
-            background: rgba(0,0,0,0.7); backdrop-filter: blur(12px); 
-            padding: 12px; font-size: 11px; font-weight: 800; text-align: center; 
-        }
-
-        .profile-card { 
-            background: var(--card-bg); backdrop-filter: blur(15px); border-radius: 32px; 
-            padding: 40px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-        }
-        .p-avatar { width: 110px; height: 110px; border-radius: 50%; border: 4px solid var(--accent); margin-bottom: 20px; box-shadow: 0 0 20px var(--accent-glow); }
-
-        .sheet { 
-            position: fixed; inset: 0; background: var(--bg-grad); z-index: 2000; 
-            display: none; padding: 30px; overflow-y: auto;
-        }
-        .sheet.active { display: block; animation: fadeInUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
-
-        .btn-back { display: flex; align-items: center; gap: 8px; color: var(--text-gray); font-weight: 600; margin-bottom: 30px; cursor: pointer; }
-
-        .game-header { display: flex; align-items: center; gap: 20px; margin-bottom: 30px; }
-        .mini-icon { width: 80px; height: 80px; border-radius: 22px; border: 2px solid var(--accent); object-fit: cover; }
-
-        .input-group { 
-            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); 
-            border-radius: 22px; padding: 18px; margin-bottom: 20px; transition: 0.3s;
-        }
-        .input-group:focus-within { border-color: var(--accent); background: rgba(139, 92, 246, 0.05); }
-        .input-group label { display: block; font-size: 10px; color: var(--text-gray); font-weight: 800; margin-bottom: 8px; text-transform: uppercase; }
-        .input-group input { width: 100%; background: none; border: none; color: white; font-size: 20px; font-weight: 700; }
-
-        .prices-grid {
+        /* Шапка с иконкой Oxide */
+        .shop-header {
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            margin: 30px 0;
+            align-items: center;
+            margin-bottom: 20px;
+            text-align: center;
+            margin-top: 10px;
         }
-        .price-row {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 20px;
-            padding: 15px;
+
+        .shop-logo {
+            width: 75px;
+            height: 75px;
+            border-radius: 18px;
+            box-shadow: 0 4px 20px rgba(255, 204, 0, 0.2);
+            margin-bottom: 12px;
+        }
+
+        .shop-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: 0.5px;
+        }
+
+        .shop-developer {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+
+        /* Верхняя панель навигации */
+        .top-navbar {
+            position: sticky;
+            top: 0;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        .price-row:active {
-            background: var(--accent-glow);
-            transform: scale(0.98);
-        }
-        .price-row.selected {
-            background: var(--accent-glow);
-            border-color: var(--accent);
-        }
-        .price-days { font-weight: 900; font-size: 18px; }
-        .price-amount { 
-            background: var(--accent); 
-            padding: 8px 16px; 
-            border-radius: 30px; 
-            font-weight: 900;
-            font-size: 16px;
+            margin-bottom: 20px;
+            background: rgba(13, 12, 10, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 10px;
+            border-radius: 12px;
+            border: 1px solid var(--card-border);
+            z-index: 150;
         }
 
-        .payment-methods {
-            display: flex;
-            gap: 12px;
-            margin: 30px 0;
-        }
-        .payment-btn {
-            flex: 1;
-            background: var(--card-bg);
-            border: 1px solid rgba(255,255,255,0.1);
+        .user-id-badge {
+            background: #1a1916;
+            padding: 8px 14px;
             border-radius: 20px;
-            padding: 16px;
+            font-size: 13px;
+            font-weight: bold;
             display: flex;
-            flex-direction: column;
             align-items: center;
             gap: 8px;
+            border: 1px solid #3d3930;
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .nav-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .nav-btn {
+            background: var(--accent-yellow);
+            border: none;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
-            transition: 0.3s;
+            position: relative;
         }
-        .payment-btn.active {
-            border-color: var(--accent);
-            background: rgba(139, 92, 246, 0.1);
-        }
-        .payment-btn i { font-size: 28px; }
-        .payment-btn span { font-size: 12px; font-weight: 700; }
 
-        .total-price { 
-            text-align: center; padding: 30px; background: var(--accent-glow); 
-            border-radius: 28px; border: 2px dashed var(--accent); margin-bottom: 30px;
+        .nav-btn svg { width: 18px; height: 18px; fill: #000; }
+
+        .cart-badge {
+            position: absolute;
+            top: -4px; right: -4px;
+            background: #e91e63;
+            color: #fff;
+            font-size: 10px;
+            font-weight: bold;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .btn-pay { 
-            background: var(--accent); color: white; border: none; border-radius: 24px; 
-            padding: 24px; width: 100%; font-size: 20px; font-weight: 900; 
-            box-shadow: 0 15px 30px var(--accent-glow);
+
+        /* Выпадающее меню выбора языка */
+        .lang-dropdown {
+            position: absolute;
+            top: 50px; right: 45px;
+            background: var(--modal-bg);
+            border: 1px solid #44413a;
+            border-radius: 8px;
+            display: none;
+            flex-direction: column;
+            z-index: 1000;
+            overflow: hidden;
+        }
+        .lang-dropdown.active { display: flex; }
+        .lang-opt {
+            padding: 10px 15px;
+            color: #fff;
+            font-size: 13px;
             cursor: pointer;
-            transition: 0.3s;
+            text-align: left;
         }
-        .btn-pay:active { transform: scale(0.95); }
+        .lang-opt:hover { background: #3a3832; }
 
-        .nav-bar { 
-            position: fixed; bottom: 25px; left: 20px; right: 20px; 
-            background: rgba(25, 25, 30, 0.85); backdrop-filter: blur(25px); 
-            display: flex; justify-content: space-around; padding: 18px; 
-            border-radius: 30px; border: 1px solid rgba(255,255,255,0.08); z-index: 1000; 
+        /* Ввод ID — Полная текстовая клавиатура и вставка */
+        .auth-container {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid var(--card-border);
         }
-        .nav-item { background: none; border: none; color: var(--text-gray); display: flex; flex-direction: column; align-items: center; gap: 5px; transition: 0.3s; cursor: pointer; }
-        .nav-item.active { color: var(--accent); transform: translateY(-5px); }
+        .auth-title {
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            color: var(--accent-yellow);
+        }
+        .input-wrapper input {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid #444035;
+            border-radius: 12px;
+            padding: 12px;
+            color: #fff;
+            font-size: 15px;
+            box-sizing: border-box;
+            outline: none;
+            -webkit-user-select: text !important;
+            user-select: text !important;
+        }
 
-        .admin-orders { margin-top: 30px; }
-        .order-card {
-            background: rgba(30, 30, 35, 0.5); border-radius: 20px; padding: 15px;
-            margin-bottom: 15px; border-left: 5px solid var(--accent);
+        /* Категории */
+        .categories-menu {
+            position: sticky; 
+            top: 60px;
+            display: flex; gap: 8px;
+            overflow-x: auto; padding: 10px 0;
+            margin-bottom: 20px;
+            background: rgba(13, 12, 10, 0.9);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            scrollbar-width: none;
         }
-        .order-card.pending { border-left-color: var(--yellow); }
-        .order-card.approved { border-left-color: var(--green); }
-        .order-card.rejected { border-left-color: var(--red); opacity: 0.6; }
-        .order-actions { display: flex; gap: 10px; margin-top: 15px; }
-        .order-actions button {
-            flex: 1; padding: 12px; border: none; border-radius: 15px;
-            font-weight: 700; font-size: 13px; cursor: pointer;
+        .categories-menu::-webkit-scrollbar { display: none; }
+        .category-tab {
+            background: #25231f; border: 1px solid #3d3930; color: #fff;
+            padding: 8px 16px; border-radius: 25px; white-space: nowrap;
+            font-size: 13px; cursor: pointer;
         }
-        .btn-approve { background: var(--green); color: black; }
-        .btn-reject { background: var(--red); color: white; }
-        .btn-deliver { background: var(--accent); color: white; }
+        .category-tab.active { border-color: var(--accent-yellow); color: var(--accent-yellow); }
 
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(100%); }
-            to { opacity: 1; transform: translateY(0); }
+        .section-title {
+            font-size: 16px; font-weight: bold; text-transform: uppercase;
+            margin: 25px 0 12px 0; color: var(--accent-yellow);
+            border-left: 3px solid var(--accent-yellow); padding-left: 8px;
+            scroll-margin-top: 120px;
+        }
+
+        /* Витрина */
+        .products-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .product-card {
+            background: var(--card-bg); border: 1px solid var(--card-border);
+            border-radius: 16px; padding: 12px; text-align: center;
+            position: relative; display: flex; flex-direction: column;
+            justify-content: space-between; align-items: center;
+            cursor: pointer;
+        }
+
+        .badge {
+            position: absolute; top: 8px; right: 8px;
+            background: #d32f2f; color: #fff; font-size: 10px;
+            font-weight: bold; padding: 2px 6px; border-radius: 5px;
+            z-index: 5;
+        }
+        .badge.purple { background: #9c27b0; }
+
+        .product-img { width: 85px; height: 85px; object-fit: contain; margin-bottom: 8px; }
+        .product-name { font-size: 14px; font-weight: 700; text-transform: uppercase; }
+        .product-bonus { font-size: 11px; color: var(--text-muted); min-height: 28px; margin-bottom: 8px; }
+
+        .price-container { width: 100%; display: flex; flex-direction: column; gap: 6px; z-index: 10; }
+        .price-value-btn {
+            background: var(--accent-yellow); color: #000; border: none;
+            border-radius: 20px; padding: 8px; font-weight: bold; font-size: 14px;
+            cursor: pointer; width: 100%; box-sizing: border-box;
+        }
+
+        .cart-action-btn {
+            background: var(--accent-yellow); border: none; border-radius: 20px;
+            padding: 8px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; height: 34px; box-sizing: border-box; width: 100%;
+        }
+        .cart-action-btn svg { width: 16px; height: 16px; fill: #000; }
+
+        .qty-counter-control {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--accent-yellow); color: #000; border-radius: 20px;
+            height: 34px; padding: 0 10px; font-weight: bold; font-size: 14px;
+            width: 100%; box-sizing: border-box;
+        }
+        .qty-btn {
+            background: transparent; border: none; color: #000;
+            font-size: 18px; font-weight: bold; width: 25px; height: 100%;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+
+        /* Модалки */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85); display: flex; align-items: center;
+            justify-content: center; z-index: 2000; opacity: 0;
+            pointer-events: none; transition: opacity 0.2s ease; padding: 15px;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        
+        .modal-window {
+            background: var(--modal-bg); border: 1px solid #44413a;
+            border-radius: 24px; width: 100%; max-width: 360px;
+            position: relative; padding: 20px; box-sizing: border-box;
+            text-align: center;
+        }
+        .close-modal {
+            position: absolute; top: 15px; right: 15px;
+            background: transparent; border: none; color: #fff;
+            font-size: 20px; cursor: pointer; opacity: 0.7;
+            z-index: 10;
+        }
+
+        /* Детали товара */
+        .modal-product-title {
+            font-size: 22px; font-weight: bold; text-transform: uppercase;
+            margin-bottom: 15px; letter-spacing: 0.5px;
+        }
+        .modal-img-container { position: relative; display: inline-block; margin-bottom: 20px; }
+        .modal-product-img { width: 140px; height: 140px; object-fit: contain; }
+        .modal-promo-badge {
+            position: absolute; bottom: 0; right: -10px; background: #d32f2f;
+            color: #fff; font-weight: bold; font-size: 14px; padding: 6px 10px;
+            border-radius: 8px; transform: rotate(-5deg); box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .modal-details-box {
+            background: #201f1c; border-radius: 14px; padding: 14px;
+            margin-bottom: 25px; font-size: 14px; color: #fff;
+            text-align: left; border: 1px solid #2f2d27;
+        }
+        .modal-action-row { display: flex; gap: 10px; }
+        .modal-yellow-btn {
+            flex: 1; background: var(--accent-yellow); color: #000; border: none;
+            border-radius: 30px; padding: 16px; font-size: 16px; font-weight: bold;
+            cursor: pointer; box-shadow: 0 4px 15px rgba(255, 204, 0, 0.25);
+        }
+        .modal-cart-btn {
+            width: 54px; background: var(--accent-yellow); border: none;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+        }
+
+        /* Стили Корзины */
+        .cart-header-row {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 15px; margin-top: 10px;
+        }
+        .cart-title-text { font-size: 22px; font-weight: bold; }
+        .clear-all-btn {
+            background: transparent; border: 1px solid #524c3a; color: #fff;
+            border-radius: 20px; padding: 6px 12px; font-size: 12px;
+            display: flex; align-items: center; gap: 4px; cursor: pointer;
+        }
+
+        .cart-items-list {
+            max-height: 240px; overflow-y: auto; margin-bottom: 15px;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .cart-item-row {
+            display: flex; gap: 10px; align-items: center;
+            border-bottom: 1px solid #383630; padding-bottom: 10px;
+        }
+        .cart-item-img {
+            width: 50px; height: 50px; background: #201f1c;
+            border-radius: 8px; object-fit: contain; padding: 4px;
+        }
+        .cart-item-info { flex: 1; text-align: left; }
+        .cart-item-name { font-size: 13px; font-weight: bold; }
+        .cart-item-price { font-size: 14px; font-weight: bold; color: #fff; margin-top: 2px; }
+        
+        .cart-item-controls { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+        .row-qty-box {
+            display: flex; align-items: center; background: #201f1c;
+            border-radius: 6px; padding: 2px 6px; font-size: 13px;
+        }
+        .row-qty-btn {
+            background: transparent; border: none; color: #fff;
+            font-size: 14px; width: 20px; cursor: pointer; opacity: 0.6;
+        }
+        .row-qty-val { width: 25px; text-align: center; font-weight: bold; }
+        .row-del-btn {
+            background: transparent; border: none; color: #9e9e9e;
+            cursor: pointer; font-size: 16px; padding: 0 4px;
+        }
+
+        .cart-total-block {
+            display: flex; justify-content: space-between; align-items: baseline;
+            margin: 15px 0 5px 0;
+        }
+        .total-lbl { font-size: 18px; font-weight: bold; }
+        .total-val { font-size: 20px; font-weight: bold; color: #fff; }
+        
+        .cart-footer-btns { display: flex; flex-direction: column; gap: 8px; margin-top: 15px; }
+        .btn-yellow-rect {
+            background: var(--accent-yellow); color: #000; border: none;
+            border-radius: 20px; padding: 12px; font-size: 14px;
+            font-weight: bold; text-transform: uppercase; cursor: pointer; text-align: center;
+        }
+        .btn-border-rect {
+            background: transparent; border: 1px solid #524c3a; color: #fff;
+            border-radius: 20px; padding: 12px; font-size: 13px;
+            font-weight: bold; cursor: pointer; text-align: center;
+        }
+
+        /* Окно Оплаты */
+        .card-details-box {
+            background: #1a1916; border: 1px dashed #524c3a;
+            border-radius: 12px; padding: 15px; margin-bottom: 15px; text-align: center;
+        }
+        .card-num-row {
+            display: flex; justify-content: center; align-items: center; gap: 10px; margin: 8px 0;
+        }
+        .card-string { font-family: monospace; font-size: 17px; font-weight: bold; color: #fff; }
+        .copy-btn {
+            background: var(--accent-yellow); border: none; border-radius: 4px;
+            padding: 3px 8px; font-size: 11px; font-weight: bold; cursor: pointer; color: #000;
+        }
+
+        /* Зона загрузки чека — Напрямую в Галерею без вызова камеры */
+        .file-upload-area {
+            border: 2px dashed #444035; border-radius: 12px; padding: 18px;
+            text-align: center; position: relative; background: var(--input-bg);
+        }
+        .file-upload-area input { position: absolute; top:0; left:0; width:100%; height:100%; opacity:0; cursor:pointer; }
+        .preview-img { max-width: 100%; max-height: 100px; border-radius: 6px; margin-top: 8px; display: none; }
+
+        /* Стиль окна успешной отправки */
+        .success-status-icon {
+            font-size: 45px; margin-bottom: 10px; display: block;
+        }
+        .success-status-text {
+            font-size: 15px; color: var(--text-muted); line-height: 1.4; margin-top: 8px;
+        }
+
+        .toast-notif {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.9); color: var(--accent-yellow); padding: 10px 20px;
+            border-radius: 20px; font-size: 13px; font-weight: bold; z-index: 3000;
+            display: none; border: 1px solid var(--accent-yellow);
         }
     </style>
 </head>
 <body>
 
-<div id="app">
-    <div id="tab-home" class="container active animate__animated animate__fadeIn">
-        <h2>Plutonium Store</h2>
-        <div class="grid" id="games-grid"></div>
+    <!-- Шапка с иконкой Oxide -->
+    <div class="shop-header">
+        <img class="shop-logo" src="https://cdn.xsolla.net/image-proxy/rs:fit:1280:0/f:webp/storage/merchant-bucket-prod/files/uploaded/sitebuilder/751385/a4400ced9479dfe2bc19865cf80423be.webp@webp" alt="Oxide Logo">
+        <h1 class="shop-title">Oxide: Survival Island</h1>
+        <div class="shop-developer">Hyperhug Entertainment</div>
     </div>
 
-    <div id="tab-history" class="container animate__animated animate__fadeIn">
-        <h2>Мої замовлення</h2>
-        <div id="history-list"></div>
-    </div>
+    <!-- Навигационная панель -->
+    <div class="top-navbar">
+        <div class="user-id-badge">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 16px; height: 16px; fill: var(--accent-yellow); flex-shrink: 0;">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            </svg>
+            <span id="nav-id-display">ID: ———</span>
+        </div>
+        <div class="nav-controls">
+            <button class="nav-btn" onclick="toggleLangDropdown()">
+                <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm6.93 6h-2.95c-.32-1.25-.78-2.45-1.38-3.56 1.84.63 3.37 1.91 4.33 3.56zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2 0 .68.06 1.34.14 2H4.26zm.82 2h2.95c.32 1.25.78 2.45 1.38 3.56-1.84-.63-3.37-1.91-4.33-3.56zm2.95-8H5.08c.96-1.65 2.49-2.93 4.33-3.56-.6 1.11-1.06 2.31-1.38 3.56zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66c-.09-.66-.16-1.32-.16-2 0-.68.07-1.34.16-2h4.68c.09.66.16 1.32.16 2 0 .68-.07 1.34-.16 2zm.25 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95c-.96 1.65-2.49 2.93-4.33 3.56zM16.36 14c.08-.66.14-1.32.14-2 0-.68-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2h-3.38z"/></svg>
+            </button>
+            <div class="lang-dropdown" id="lang-menu">
+                <div class="lang-opt" onclick="setLanguage('ru')">Русский</div>
+                <div class="lang-opt" onclick="setLanguage('uk')">Українська</div>
+                <div class="lang-opt" onclick="setLanguage('en')">English</div>
+            </div>
 
-    <div id="tab-profile" class="container animate__animated animate__fadeIn">
-        <h2>Профіль</h2>
-        <div class="profile-card">
-            <img id="u-photo" class="p-avatar" src="https://via.placeholder.com/110">
-            <h3 id="u-name" style="font-size: 24px;">Завантаження...</h3>
-            <p id="u-id" style="color:var(--text-gray); font-weight: 600;">ID: 00000000</p>
+            <button class="nav-btn" onclick="openCartModal()">
+                <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                <div class="cart-badge" id="global-cart-count">0</div>
+            </button>
         </div>
     </div>
 
-    <div id="tab-admin" class="container animate__animated animate__fadeIn">
-        <h2>Адмін-панель</h2>
-        <div class="admin-orders" id="admin-orders"></div>
-    </div>
-
-    <nav class="nav-bar">
-        <button class="nav-item active" onclick="switchTab('home', this)"><i data-lucide="layout-grid"></i><span>Магазин</span></button>
-        <button class="nav-item" onclick="switchTab('history', this)"><i data-lucide="receipt"></i><span>Історія</span></button>
-        <button class="nav-item" onclick="switchTab('profile', this)"><i data-lucide="user"></i><span>Профіль</span></button>
-    </nav>
-</div>
-
-<div id="pay-sheet" class="sheet">
-    <div class="btn-back" onclick="closeSheet()"><i data-lucide="arrow-left"></i> ПОВЕРНУТИСЯ</div>
-    
-    <div class="game-header">
-        <img id="g-icon" class="mini-icon" src="">
-        <div>
-            <h1 id="g-name" style="margin:0; font-size:32px; font-weight:900;">Game</h1>
-            <div style="color:var(--green); font-weight:800;">Виберіть період:</div>
+    <!-- Ввод ID — Полная буквенная клавиатура и возможность вставки -->
+    <div class="auth-container">
+        <div class="auth-title" id="lang-step1">Шаг 1: Введите ваш ID игрока</div>
+        <div class="input-wrapper">
+            <input type="text" id="oxide-id" placeholder="ID игрока (буквы и цифры)..." inputmode="text" oninput="syncIdDisplay()">
         </div>
     </div>
 
-    <div class="input-group">
-        <label>Ігровий нікнейм</label>
-        <input type="text" id="p-tag" placeholder="Ваш нікнейм">
+    <!-- Категории -->
+    <div class="categories-menu" id="cats-box">
+        <div class="category-tab active" id="tab-coins" onclick="scrollToSection('sec-coins', this)">Coin Packs</div>
+        <div class="category-tab" id="tab-tickets" onclick="scrollToSection('sec-tickets', this)">Наборы билетов</div>
+        <div class="category-tab" id="tab-bp" onclick="scrollToSection('sec-bp', this)">Монеты БП</div>
+        <div class="category-tab" id="tab-premium" onclick="scrollToSection('sec-premium', this)">Премиум статус</div>
     </div>
 
-    <div id="price-list" class="prices-grid"></div>
+    <!-- Витрина товаров -->
+    <div class="section-title" id="sec-coins">Coin Packs</div>
+    <div class="products-grid" id="container-coins"></div>
 
-    <div class="payment-methods" id="payment-methods">
-        <div class="payment-btn active" onclick="selectPayment('card')" id="pay-card">
-            <i data-lucide="credit-card"></i>
-            <span>Картка</span>
+    <div class="section-title" id="sec-tickets">Наборы билетов</div>
+    <div class="products-grid" id="container-tickets"></div>
+
+    <div class="section-title" id="sec-bp">Монеты боевого пропуска</div>
+    <div class="products-grid" id="container-bp"></div>
+
+    <div class="section-title" id="sec-premium">Премиум статус</div>
+    <div class="products-grid" id="container-premium"></div>
+
+
+    <!-- МОДАЛЬНОЕ ОКНО ТОВАРА -->
+    <div class="modal-overlay" id="modal-product">
+        <div class="modal-window">
+            <button class="close-modal" onclick="closeModal('modal-product')">✕</button>
+            <div class="modal-product-title" id="m-title">315 COINS</div>
+            <div class="modal-img-container">
+                <img class="modal-product-img" id="m-img" src="" alt="product">
+                <div class="modal-promo-badge" id="m-badge">+25%</div>
+            </div>
+            <div class="modal-details-box">
+                <div style="font-weight: bold; font-size: 15px;" id="m-bonus-title">250 + 65 Бонус веб магазина</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Монеты Oxide: Survival Island</div>
+            </div>
+            <div class="modal-action-row">
+                <button class="modal-yellow-btn" id="m-price-btn" onclick="buyDirectFromModal()">0 грн</button>
+                <button class="modal-cart-btn" id="m-add-cart-btn" style="color:#000; font-size:18px; font-weight:bold;">+</button>
+            </div>
         </div>
-        <div class="payment-btn" onclick="selectPayment('crypto')" id="pay-crypto">
-            <i data-lucide="bitcoin"></i>
-            <span>CryptoBot</span>
+    </div>
+
+
+    <!-- МОДАЛЬНОЕ ОКНО КОРЗИНЫ -->
+    <div class="modal-overlay" id="modal-cart">
+        <div class="modal-window">
+            <button class="close-modal" onclick="closeModal('modal-cart')">✕</button>
+            <div class="cart-header-row">
+                <div class="cart-title-text" id="lang-cart-title">Корзина</div>
+                <button class="clear-all-btn" onclick="clearCart()">
+                    <span id="lang-clear-all">Удалить все</span> ✕
+                </button>
+            </div>
+            <div class="cart-items-list" id="cart-items-render"></div>
+            <div class="cart-total-block">
+                <div class="total-lbl" id="lang-total-lbl">Всего</div>
+                <div class="total-val" id="cart-total-sum">0 грн</div>
+            </div>
+            <div style="font-size: 11px; color: var(--text-muted); text-align: left; margin-bottom: 15px;" id="lang-tax-info">Без учета налогов и комиссий</div>
+            <div class="cart-footer-btns">
+                <button class="btn-yellow-rect" id="lang-btn-pay" onclick="goToPayment()">Перейти к оплате</button>
+                <button class="btn-border-rect" id="lang-btn-continue" onclick="closeModal('modal-cart')">Продолжить покупки</button>
+            </div>
         </div>
     </div>
 
-    <div class="total-price">
-        <div style="font-size:12px; color:var(--text-gray); margin-bottom:10px; font-weight:800;">ДО ОПЛАТИ</div>
-        <span style="font-size:42px; font-weight:950;" id="total-price">0</span> <span style="font-size:24px; font-weight:700;" id="currency">грн</span>
-    </div>
 
-    <button class="btn-pay animate__animated animate__pulse animate__infinite" onclick="sendOrder()" id="pay-btn">ОПЛАТИТИ</button>
-    <div style="height: 50px;"></div>
-</div>
-
-<!-- ЕКРАН ВИДАЧІ ТОВАРУ -->
-<div id="delivery-sheet" class="sheet">
-    <div class="btn-back" onclick="closeDeliverySheet()"><i data-lucide="arrow-left"></i> НАЗАД</div>
-    
-    <h2 style="margin-bottom: 20px;">Видача товару</h2>
-    
-    <div class="input-group">
-        <label>ID ЗАМОВЛЕННЯ</label>
-        <input type="text" id="delivery-order-id" readonly>
-    </div>
-    
-    <div class="input-group">
-        <label>ІНФОРМАЦІЯ ПРО КЛІЄНТА</label>
-        <div id="delivery-client-info" style="color: var(--text-gray); font-size: 14px; padding: 10px 0;"></div>
-    </div>
-    
-    <div class="input-group">
-        <label>ФАЙЛ (file_id)</label>
-        <input type="text" id="delivery-file" placeholder="Введіть file_id">
-    </div>
-    
-    <div class="input-group">
-        <label>КЛЮЧ АКТИВАЦІЇ</label>
-        <input type="text" id="delivery-key" placeholder="Введіть ключ">
-    </div>
-    
-    <button class="btn-pay" onclick="sendDelivery()" style="margin-top: 20px;">✅ ВІДПРАВИТИ КЛІЄНТУ</button>
-</div>
-
-<script>
-    const tg = window.Telegram.WebApp;
-    tg.ready(); tg.expand(); 
-    
-    const BOT_TOKEN = "8522948833:AAFPgQz77GDY2YafZRtNMM9ilcxZ65_2wus";
-    const ADMIN_ID = 1471307057;
-    const CARD_NUMBER = "4441111008011946";
-    const CRYPTO_TOKEN = "466345:AADMm3mzlC6KGJmwt3r771bUPIx40CMEKhQ";
-    const CRYPTO_API = "https://pay.crypt.bot/api";
-
-    const user = tg.initDataUnsafe?.user || { id: 777, first_name: "Гість" };
-    const isAdmin = user.id === ADMIN_ID;
-
-    const cheats = [
-        {
-            id: 'plutonium',
-            name: '🦾 Plutonium',
-            game: 'Standoff 2',
-            icon: 'https://files.catbox.moe/eqco0i.png',
-            prices: {
-                '7': { uah: 150, usd: 3.5 },
-                '30': { uah: 300, usd: 7 },
-                '90': { uah: 700, usd: 16.5 }
-            }
-        },
-        {
-            id: 'zolo',
-            name: '🔥 Zolo Cheat',
-            game: 'PUBG Mobile',
-            icon: 'https://files.catbox.moe/opz3nu.png',
-            prices: {
-                '1': 85, '3': 180, '7': 325, '14': 400, '30': 690, '60': 1000
-            }
-        },
-        {
-            id: 'impact',
-            name: '⚡ Impact VIP',
-            game: 'PUBG Mobile',
-            icon: 'https://files.catbox.moe/9ztxkj.png',
-            prices: {
-                '1': 115, '7': 480, '30': 1170
-            }
-        },
-        {
-            id: 'king',
-            name: '👑 King Mod',
-            game: 'PUBG Mobile',
-            icon: 'https://files.catbox.moe/vyhlec.png',
-            prices: {
-                '1': 100, '7': 425, '30': 1060
-            }
-        },
-        {
-            id: 'inferno',
-            name: '💥 Inferno Cheat',
-            game: 'PUBG Mobile',
-            icon: 'https://files.catbox.moe/5vtpq1.png',
-            prices: {
-                '1': 80, '3': 200, '7': 350, '15': 530, '30': 690, '60': 950
-            }
-        },
-        {
-            id: 'zolo_cis',
-            name: '🎮 Zolo CIS',
-            game: 'PUBG Mobile',
-            icon: 'https://files.catbox.moe/deicc2.png',
-            prices: {
-                '1': 70, '3': 150, '7': 250, '14': 350, '30': 700, '60': 900
-            }
-        }
-    ];
-
-    let currentCheat = null;
-    let selectedDays = null;
-    let paymentMethod = 'card';
-
-    // Профіль
-    document.getElementById('u-name').innerText = user.first_name;
-    document.getElementById('u-id').innerText = 'ID: ' + user.id;
-    if(user.photo_url) document.getElementById('u-photo').src = user.photo_url;
-
-    // Додаємо кнопку адміна якщо треба
-    if(isAdmin) {
-        const navBar = document.querySelector('.nav-bar');
-        const adminBtn = document.createElement('button');
-        adminBtn.className = 'nav-item';
-        adminBtn.setAttribute('onclick', "switchTab('admin', this)");
-        adminBtn.innerHTML = '<i data-lucide="shield"></i><span>Адмін</span>';
-        navBar.appendChild(adminBtn);
-    }
-
-    function loadGames() {
-        const grid = document.getElementById('games-grid');
-        grid.innerHTML = '';
-        cheats.forEach(cheat => {
-            const card = document.createElement('div');
-            card.className = 'card animate__animated animate__backInUp';
-            card.setAttribute('onclick', `openCheat('${cheat.id}')`);
-            card.innerHTML = `
-                <img src="${cheat.icon}" onerror="this.src='https://img.icons8.com/color/512/game.png'">
-                <div class="card-info">${cheat.name}</div>
-            `;
-            grid.appendChild(card);
-        });
-        lucide.createIcons();
-    }
-
-    function switchTab(tab, el) {
-        document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
-        document.getElementById('tab-' + tab).classList.add('active');
-        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        el.classList.add('active');
-        if(tab === 'history') renderHistory();
-        if(tab === 'admin' && isAdmin) renderAdminOrders();
-        tg.HapticFeedback.impactOccurred('medium');
-    }
-
-    function openCheat(cheatId) {
-        currentCheat = cheats.find(c => c.id === cheatId);
-        selectedDays = null;
-        
-        document.getElementById('g-name').innerText = currentCheat.name;
-        document.getElementById('g-icon').src = currentCheat.icon;
-        
-        renderPrices();
-        
-        document.getElementById('pay-sheet').style.display = 'block';
-        document.getElementById('pay-sheet').classList.add('active');
-    }
-
-    function renderPrices() {
-        const priceList = document.getElementById('price-list');
-        priceList.innerHTML = '';
-        
-        for(const [days, price] of Object.entries(currentCheat.prices)) {
-            const row = document.createElement('div');
-            row.className = 'price-row';
-            row.setAttribute('onclick', `selectDays('${days}')`);
+    <!-- МОДАЛЬНОЕ ОКНО ОПЛАТЫ -->
+    <div class="modal-overlay" id="modal-payment">
+        <div class="modal-window">
+            <button class="close-modal" onclick="closeModal('modal-payment')">✕</button>
+            <div class="auth-title" style="text-align: center; margin-bottom: 15px;" id="lang-pay-header">Оплата заказа</div>
             
-            let priceText = '';
-            if(currentCheat.id === 'plutonium') {
-                priceText = `${price.uah} грн / ${price.usd}$`;
-            } else {
-                priceText = `${price} грн`;
+            <div class="card-details-box">
+                <div style="font-size: 12px; color: var(--text-muted);" id="lang-pay-transfer-msg">Переведите сумму заказа на карту:</div>
+                <div class="card-num-row">
+                    <div class="card-string" id="target-card">4441111008011946</div>
+                    <button class="copy-btn" id="lang-copy-btn" onclick="copyCardNum()">Копировать</button>
+                </div>
+                <div style="font-size: 15px; font-weight: bold; color: var(--accent-yellow); margin-top: 5px;" id="pay-final-price">0 грн</div>
+            </div>
+
+            <div style="font-size: 13px; margin-bottom: 8px; font-weight: bold; text-align: left;" id="lang-attach-receipt">Прикрепите фото чека / оплаты:</div>
+            
+            <!-- accept изменен для открытия системного меню с Галереей -->
+            <div class="file-upload-area">
+                <span>📸</span>
+                <span id="upload-text" style="font-size: 12px; display:block; color: var(--text-muted);">Выбрать файл</span>
+                <input type="file" id="receipt-file" accept="image/jpeg, image/png, image/jpg" onchange="handleFile(this)">
+                <img id="file-preview" class="preview-img" alt="Receipt Preview">
+            </div>
+
+            <button id="final-submit-btn" class="btn-yellow-rect" style="width: 100%; margin-top: 15px; border-radius: 14px;" disabled onclick="sendOrderToBot()">
+                <span id="lang-confirm-pay-btn">Подтвердить оплату</span>
+            </button>
+        </div>
+    </div>
+
+
+    <!-- МОДАЛЬНОЕ ОКНО СТАТУСА ПРОВЕРКИ -->
+    <div class="modal-overlay" id="modal-status">
+        <div class="modal-window">
+            <span class="success-status-icon">⏳</span>
+            <div class="modal-product-title" style="font-size: 18px; color: var(--accent-yellow);" id="lang-status-title">Оплата на проверке</div>
+            <div class="success-status-text" id="lang-status-text">
+                Ваша оплата на проверке, ожидайте сообщение от бота.
+            </div>
+            <button class="btn-yellow-rect" style="width: 100%; margin-top: 20px; border-radius: 12px; padding: 10px;" onclick="closeAllAndExit()">OK</button>
+        </div>
+    </div>
+
+    <div class="toast-notif" id="toast-msg">Скопировано!</div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        const locales = {
+            ru: {
+                step1: "Шаг 1: Введите ваш ID игрока",
+                coins: "Coin Packs", tickets: "Наборы билетов", bp: "Монеты БП", premium: "Премиум статус",
+                cartTitle: "Корзина", clearAll: "Удалить все", totalLbl: "Всего", taxInfo: "Без учета налогов и комиссий",
+                btnPay: "Перейти к оплате", btnContinue: "Продолжить покупки", payHeader: "Оплата заказа",
+                transferMsg: "Переведите сумму заказа на карту:", copyBtn: "Копировать", attachReceipt: "Прикрепите фото чека / оплаты:",
+                confirmPay: "Подтвердить оплату", toastCopied: "Номер карты скопирован!", alertId: "Сначала введите корректный ID игрока!",
+                uploadText: "Выбрать файл чека", fileDone: "Чек успешно загружен!",
+                statusTitle: "Оплата на проверке", statusText: "Ваша оплата на проверке, ожидайте сообщение от бота."
+            },
+            uk: {
+                step1: "Крок 1: Введіть ваш ID гравця",
+                coins: "Coin Packs", tickets: "Набори квитків", bp: "Монети БП", premium: "Преміум статус",
+                cartTitle: "Кошик", clearAll: "Видалити все", totalLbl: "Всього", taxInfo: "Без урахування податків та комісій",
+                btnPay: "Перейти до оплати", btnContinue: "Продовжити покупки", payHeader: "Оплата замовлення",
+                transferMsg: "Переведіть суму замовлення на карту:", copyBtn: "Копіювати", attachReceipt: "Прикріпіть фото чека / оплати:",
+                confirmPay: "Підтвердити оплату", toastCopied: "Номер карти скопійовано!", alertId: "Спочатку введіть коректний ID гравця!",
+                uploadText: "Обрати файл чека", fileDone: "Чек успішно завантажено!",
+                statusTitle: "Оплата на перевірці", statusText: "Ваша оплата на перевірці, очікуйте повідомлення від бота."
+            },
+            en: {
+                step1: "Step 1: Enter your Player ID",
+                coins: "Coin Packs", tickets: "Ticket Packs", bp: "BP Coins", premium: "Premium Status",
+                cartTitle: "Cart", clearAll: "Clear all", totalLbl: "Total", taxInfo: "Excluding taxes and fees",
+                btnPay: "Proceed to checkout", btnContinue: "Continue shopping", payHeader: "Order Payment",
+                transferMsg: "Transfer the order total to the card:", copyBtn: "Copy", attachReceipt: "Attach photo of the receipt:",
+                confirmPay: "Confirm Payment", toastCopied: "Card number copied!", alertId: "Please enter a valid Player ID first!",
+                uploadText: "Choose receipt file", fileDone: "Receipt successfully loaded!",
+                statusTitle: "Payment under review", statusText: "Your payment is being verified, please wait for a message from the bot."
             }
-            
-            row.innerHTML = `
-                <span class="price-days">${days} дн.</span>
-                <span class="price-amount">${priceText}</span>
-            `;
-            priceList.appendChild(row);
-        }
-    }
-
-    function selectDays(days) {
-        selectedDays = days;
-        document.querySelectorAll('.price-row').forEach(r => r.classList.remove('selected'));
-        event.currentTarget.classList.add('selected');
-        updateTotal();
-    }
-
-    function selectPayment(method) {
-        paymentMethod = method;
-        document.getElementById('pay-card').classList.toggle('active', method === 'card');
-        document.getElementById('pay-crypto').classList.toggle('active', method === 'crypto');
-        
-        const currency = method === 'card' ? 'грн' : '$';
-        document.getElementById('currency').innerText = currency;
-        updateTotal();
-    }
-
-    function updateTotal() {
-        if(!selectedDays || !currentCheat) return;
-        
-        const price = currentCheat.prices[selectedDays];
-        let total = 0;
-        
-        if(currentCheat.id === 'plutonium') {
-            total = paymentMethod === 'card' ? price.uah : price.usd;
-        } else {
-            total = price;
-        }
-        
-        document.getElementById('total-price').innerText = total;
-    }
-
-    function closeSheet() { 
-        document.getElementById('pay-sheet').classList.remove('active');
-        setTimeout(() => { document.getElementById('pay-sheet').style.display = 'none'; }, 400);
-    }
-
-    function closeDeliverySheet() {
-        document.getElementById('delivery-sheet').classList.remove('active');
-        setTimeout(() => { document.getElementById('delivery-sheet').style.display = 'none'; }, 400);
-    }
-
-    async function createCryptoInvoice() {
-        if(!selectedDays || !currentCheat) return;
-        
-        const amount = currentCheat.id === 'plutonium' 
-            ? currentCheat.prices[selectedDays].usd
-            : currentCheat.prices[selectedDays];
-        
-        const tag = document.getElementById('p-tag').value.trim();
-        if(!tag) {
-            tg.showAlert("Введіть ваш нікнейм!");
-            return;
-        }
-        
-        const orderId = 'ORD' + Date.now().toString().slice(-8);
-        
-        try {
-            const response = await fetch(`https://api.telegram.org/bot${CRYPTO_TOKEN}/createInvoice`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    asset: 'USDT',
-                    amount: amount,
-                    description: `${currentCheat.name} - ${selectedDays} днів`,
-                    paid_btn_name: 'openBot',
-                    paid_btn_url: `https://t.me/PlutoniumfilesBot`,
-                    payload: `${user.id}|${selectedDays}|${currentCheat.id}`
-                })
-            });
-            
-            const data = await response.json();
-            
-            if(data.ok && data.result) {
-                const invoice = data.result;
-                
-                const order = {
-                    id: orderId,
-                    cheat: currentCheat.name,
-                    cheatId: currentCheat.id,
-                    days: selectedDays,
-                    price: amount,
-                    currency: 'USD',
-                    tag: tag,
-                    status: 'pending',
-                    userId: user.id,
-                    userName: user.first_name,
-                    paymentMethod: 'crypto',
-                    invoiceId: invoice.invoice_id,
-                    timestamp: new Date().toISOString()
-                };
-
-                let history = JSON.parse(localStorage.getItem('plutonium_orders') || '[]');
-                history.push(order);
-                localStorage.setItem('plutonium_orders', JSON.stringify(history));
-
-                tg.openLink(invoice.pay_url);
-                
-                const msg = `🆕 *КРИПТО-ЗАМОВЛЕННЯ #${orderId}*\n\n` +
-                    `👤 Клієнт: ${user.first_name} (ID: ${user.id})\n` +
-                    `🎮 Чит: ${currentCheat.name}\n` +
-                    `📅 Період: ${selectedDays} дн.\n` +
-                    `🆔 Нік: \`${tag}\`\n` +
-                    `💰 Сума: ${amount} USDT\n` +
-                    `💳 Спосіб: CryptoBot`;
-
-                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ chat_id: ADMIN_ID, text: msg, parse_mode: "Markdown" })
-                });
-                
-                tg.showAlert(`✅ Замовлення #${orderId} створено! Перейдіть за посиланням для оплати.`);
-                closeSheet();
-            } else {
-                tg.showAlert("Помилка створення рахунку. Спробуйте пізніше.");
-            }
-        } catch (error) {
-            console.error('CryptoBot error:', error);
-            tg.showAlert("Помилка з'єднання з CryptoBot");
-        }
-    }
-
-    async function sendOrder() {
-        if(paymentMethod === 'crypto') {
-            await createCryptoInvoice();
-            return;
-        }
-        
-        const tag = document.getElementById('p-tag').value.trim();
-        if(!tag) return tg.showAlert("Введіть ваш нікнейм!");
-        if(!selectedDays) return tg.showAlert("Виберіть період!");
-
-        const price = currentCheat.prices[selectedDays];
-        const total = currentCheat.id === 'plutonium' ? price.uah : price;
-
-        const orderId = 'ORD' + Date.now().toString().slice(-8);
-        const order = {
-            id: orderId,
-            cheat: currentCheat.name,
-            cheatId: currentCheat.id,
-            days: selectedDays,
-            price: total,
-            currency: 'UAH',
-            tag: tag,
-            status: 'pending',
-            userId: user.id,
-            userName: user.first_name,
-            paymentMethod: 'card',
-            timestamp: new Date().toISOString()
         };
 
-        let history = JSON.parse(localStorage.getItem('plutonium_orders') || '[]');
-        history.push(order);
-        localStorage.setItem('plutonium_orders', JSON.stringify(history));
+        let currentLang = 'ru';
 
-        const msg = `🆕 *ЗАМОВЛЕННЯ #${orderId}*\n\n` +
-            `👤 Клієнт: ${user.first_name} (ID: ${user.id})\n` +
-            `🎮 Чит: ${currentCheat.name}\n` +
-            `📅 Період: ${selectedDays} дн.\n` +
-            `🆔 Нік: \`${tag}\`\n` +
-            `💰 Сума: ${total} грн\n` +
-            `💳 Спосіб: Банківська картка`;
+        const productsData = [
+            { id: 'coins_100', category: 'coins', name: '100 Coins', bonus: '50 + 50 ПРЕДЛОЖЕНИЕ', price: 70, img: 'https://cdn3.xsolla.com/image-proxy/rs:fit:1280:0/f:webp/static/img/misc/images/3e13e3a1aea178a886fa78372c7c6992.png@webp', badge: '+100%', badgeColor: 'purple' },
+            { id: 'coins_145', category: 'coins', name: '145 Coins', bonus: '125 + 20 Бонус веб шопа', price: 105, img: 'https://cdn3.xsolla.com/image-proxy/rs:fit:1280:0/f:webp/static/img/misc/images/d5f1b24a4eb4da5f74e09b7b1b8f609f.png@webp', badge: '+15%', badgeColor: 'red' },
+            { id: 'coins_315', category: 'coins', name: '315 Coins', bonus: '250 + 65 Бонус веб шопа', price: 215, img: 'https://cdn3.xsolla.com/image-proxy/rs:fit:1280:0/f:webp/static/img/misc/images/c71082abb5cbf2683d79c5f312873ad1.png@webp', badge: '+25%', badgeColor: 'red' },
+            { id: 'coins_675', category: 'coins', name: '675 Coins', bonus: '500 + 175 Бонус веб шопа', price: 425, img: 'https://cdn3.xsolla.com/image-proxy/rs:fit:1280:0/f:webp/static/img/misc/images/be674b70bc58e80ed6a8f31c89ce2e9b.png@webp', badge: '+35%', badgeColor: 'red' },
+            { id: 'coins_1750', category: 'coins', name: '1750 Coins', bonus: '1250 + 500 Бонус шопа', price: 950, img: 'https://cdn3.xsolla.com/image-proxy/rs:fit:1280:0/f:webp/static/img/misc/images/5860975bfb09a58c3281089672a4b641.png@webp', badge: '+40%', badgeColor: 'red' },
+            { id: 'coins_3750', category: 'coins', name: '3750 Coins', bonus: '2500 + 1250 Бонус шопа', price: 1850, img: 'https://cdn3.xsolla.com/image-proxy/rs:fit:1280:0/f:webp/static/img/misc/images/066a361faa3199a1e46a6fbac180c15c.png@webp', badge: '+50%', badgeColor: 'red' },
+            { id: 'coins_11250', category: 'coins', name: '11250 Coins', bonus: '7500 + 3750 Бонус шопа', price: 4750, img: 'https://cdn3.xsolla.com/image-proxy/rs:fit:1280:0/f:webp/static/img/misc/images/d7f41518f6ae59f406c869f76e3bf0c8.png@webp', badge: '+55%', badgeColor: 'red' },
 
-        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ chat_id: ADMIN_ID, text: msg, parse_mode: "Markdown" })
-        });
+            { id: 'tickets_5', category: 'tickets', name: '5 Билетов', bonus: 'Стартовый набор билетов', price: 45, img: 'https://cdn3.xsolla.com/image-proxy/rs:fit:1280:0/f:webp/static/img/misc/images/a67feafa97eac1b60e7f8877d9ec1770.png@webp', badge: '', badgeColor: '' },
+            { id: 'tickets_11', category: 'tickets', name: '11 Билетов', bonus: '10 + 1 Бонусный билет', price: 95, img: 'https://cdn3.xsolla.com/image-proxy/rs:fit:1280:0/f:webp/static/img/misc/images/a67feafa97eac1b60e7f8877d9ec1770.png@webp', badge: '+10%', badgeColor: 'red' },
+            { id: 'tickets_28', category: 'tickets', name: '28 Билетов', bonus: '25 + 3 Бонусных билета', price: 235, img: 'https://cdn3.xsolla.com/image-proxy/rs:fit:1280:0/f:webp/static/img/misc/images/a67feafa97eac1b60e7f8877d9ec1770.png@webp', badge: '+12%', badgeColor: 'purple' },
+            { id: 'tickets_75', category: 'tickets', name: '75 Билетов', bonus: '60 + 15 Бонусных билетов', price: 570, img: 'https://cdn3.xsolla.com/image-proxy/rs:fit:1280:0/f:webp/static/img/misc/images/a67feafa97eac1b60e7f8877d9ec1770.png@webp', badge: 'ХИТ', badgeColor: 'red' },
+            { id: 'tickets_160', category: 'tickets', name: '160 Билетов', bonus: '120 + 40 Бонусных билетов', price: 1150, img: 'https://cdn3.xsolla.com/image-proxy/rs:fit:1280:0/f:webp/static/img/misc/images/a67feafa97eac1b60e7f8877d9ec1770.png@webp', badge: 'ВЫГОДА', badgeColor: 'purple' },
 
-        // Передаємо суму в КОПІЙКАХ (грн * 100)
-        const amountInKopecks = Math.round(total * 100);
-        tg.openLink(`https://send.monobank.ua/jar/7bpLBmtzoA?a=${amountInKopecks}`);
-        tg.showAlert(`✅ Замовлення #${orderId} створено!\nКартка: ${CARD_NUMBER}\nКоментар: За цифрові товари\nСума до сплати: ${total} грн`);
+            { id: 'bp_25', category: 'bp', name: '25 Монет БП', bonus: 'Опыт боевого пропуска игры', price: 90, img: 'https://cdn3.xsolla.com/image-proxy/rs:fit:1280:0/f:webp/static/img/misc/images/82b4ae2b59c5abc0adce9d64b7a8d33b.png@webp', badge: '', badgeColor: '' },
+            { id: 'bp_75', category: 'bp', name: '75 Монет БП', bonus: 'Ускоренное открытие уровней БП', price: 235, img: 'https://cdn3.xsolla.com/image-proxy/rs:fit:1280:0/f:webp/static/img/misc/images/5926982f540b5edde615d59ebe1380fd.png@webp', badge: 'ПОПУЛЯРНО', badgeColor: 'red' },
+            { id: 'bp_250', category: 'bp', name: '250 Монет БП', bonus: 'Максимальный буст уровней пропуска', price: 620, img: 'https://cdn3.xsolla.com/image-proxy/rs:fit:1280:0/f:webp/static/img/misc/images/431d535b8b47c38dc65029a66a117808.png@webp', badge: 'ТОП ВЫБОР', badgeColor: 'purple' },
 
-        closeSheet();
-    }
+            { id: 'premium_30', category: 'premium', name: 'Premium статус', bonus: 'Уникальные VIP привилегии на 30 дней', price: 310, img: 'https://cdn3.xsolla.com/image-proxy/rs:fit:1280:0/f:webp/static/img/misc/images/851ae7116e32bbfb08ec1e9906d4e4d4.png@webp', badge: 'VIP', badgeColor: 'purple' }
+        ];
 
-    function renderHistory() {
-        const list = document.getElementById('history-list');
-        const orders = JSON.parse(localStorage.getItem('plutonium_orders') || '[]')
-            .filter(o => o.userId === user.id)
-            .reverse();
+        let cart = {};
+        let base64Image = null;
+        let selectedModalProduct = null;
+        let finalDataPayload = null;
 
-        if(!orders.length) { 
-            list.innerHTML = '<p style="text-align:center; color:gray; margin-top:50px;">У вас ще немає замовлень</p>'; 
-            return; 
-        }
-        
-        list.innerHTML = orders.map(o => {
-            const statusColor = o.status === 'approved' ? 'var(--green)' : 
-                              o.status === 'rejected' ? 'var(--red)' : 'var(--yellow)';
-            const statusText = o.status === 'approved' ? '✅ Підтверджено' : 
-                             o.status === 'rejected' ? '❌ Відхилено' : '⏳ В обробці';
-            
-            return `
-                <div class="input-group animate__animated animate__fadeInUp" style="border-left:5px solid ${statusColor}">
-                    <div style="display:flex; justify-content:space-between;">
-                        <b>${o.cheat}</b> 
-                        <span style="color:${statusColor}; font-size:10px; font-weight:900;">${statusText}</span>
-                    </div>
-                    <div style="font-size:12px; margin-top:5px; color:var(--text-gray)">
-                        ${o.days} дн. • ${o.price} ${o.currency} • ${o.tag}<br>
-                        ID: ${o.id}
-                    </div>
-                </div>
-            `;
-        }).join('');
-    }
+        function initShop() {
+            const categories = ['coins', 'tickets', 'bp', 'premium'];
+            categories.forEach(cat => {
+                const container = document.getElementById(`container-${cat}`);
+                container.innerHTML = '';
+                
+                productsData.filter(p => p.category === cat).forEach(product => {
+                    const card = document.createElement('div');
+                    card.className = 'product-card';
+                    
+                    card.onclick = (e) => {
+                        if(e.target.closest('.qty-counter-control') || e.target.closest('.cart-action-btn')) return;
+                        openProductDetails(product);
+                    };
 
-    function openDeliverySheet(order) {
-        document.getElementById('delivery-order-id').value = order.id;
-        document.getElementById('delivery-client-info').innerHTML = 
-            `👤 ${order.userName} (ID: ${order.userId})<br>` +
-            `🎮 ${order.cheat} - ${order.days} дн.<br>` +
-            `🆔 ${order.tag}`;
-        document.getElementById('delivery-sheet').style.display = 'block';
-        document.getElementById('delivery-sheet').classList.add('active');
-    }
+                    let badgeHtml = product.badge ? `<div class="badge ${product.badgeColor === 'purple' ? 'purple' : ''}">${product.badge}</div>` : '';
 
-    async function sendDelivery() {
-        const orderId = document.getElementById('delivery-order-id').value;
-        const fileId = document.getElementById('delivery-file').value.trim();
-        const key = document.getElementById('delivery-key').value.trim();
-        
-        if(!fileId || !key) {
-            tg.showAlert("Введіть файл і ключ!");
-            return;
-        }
-
-        let orders = JSON.parse(localStorage.getItem('plutonium_orders') || '[]');
-        const orderIndex = orders.findIndex(o => o.id === orderId);
-        
-        if(orderIndex === -1) {
-            tg.showAlert("Замовлення не знайдено!");
-            return;
-        }
-
-        const order = orders[orderIndex];
-        
-        try {
-            // Відправляємо файл
-            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ 
-                    chat_id: order.userId, 
-                    document: fileId,
-                    caption: `🔑 *КЛЮЧ АКТИВАЦІЇ:* \`${key}\``,
-                    parse_mode: "Markdown"
-                })
+                    card.innerHTML = `
+                        ${badgeHtml}
+                        <img class="product-img" src="${product.img}" alt="${product.name}">
+                        <div class="product-name">${product.name}</div>
+                        <div class="product-bonus">${product.bonus}</div>
+                        <div class="price-container" id="actions-${product.id}"></div>
+                    `;
+                    container.appendChild(card);
+                    renderProductButton(product.id);
+                });
             });
-
-            // Відправляємо повідомлення
-            const userMsg = `✅ *ВАШЕ ЗАМОВЛЕННЯ #${orderId} ГОТОВЕ!*\n\n` +
-                `🎮 Чит: ${order.cheat}\n` +
-                `📅 Період: ${order.days} дн.\n` +
-                `🔑 Ключ: \`${key}\`\n\n` +
-                `Дякуємо за покупку в Plutonium Store! ❤️`;
-
-            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ 
-                    chat_id: order.userId, 
-                    text: userMsg, 
-                    parse_mode: "Markdown" 
-                })
-            });
-
-            order.status = 'approved';
-            orders[orderIndex] = order;
-            localStorage.setItem('plutonium_orders', JSON.stringify(orders));
-
-            document.getElementById('delivery-file').value = '';
-            document.getElementById('delivery-key').value = '';
-            
-            tg.showAlert("✅ Товар відправлено клієнту!");
-            closeDeliverySheet();
-            renderAdminOrders();
-        } catch (error) {
-            console.error('Delivery error:', error);
-            tg.showAlert("❌ Помилка при відправці");
+            updateCartCounter();
         }
-    }
 
-    function renderAdminOrders() {
-        const list = document.getElementById('admin-orders');
-        const orders = JSON.parse(localStorage.getItem('plutonium_orders') || '[]').reverse();
+        function renderProductButton(prodId) {
+            const container = document.getElementById(`actions-${prodId}`);
+            if (!container) return;
 
-        if(!orders.length) { 
-            list.innerHTML = '<p style="text-align:center; color:gray; margin-top:50px;">Немає замовлень</p>'; 
-            return; 
+            const product = productsData.find(p => p.id === prodId);
+            const count = cart[prodId] || 0;
+
+            if (count > 0) {
+                container.innerHTML = `
+                    <div class="qty-counter-control">
+                        <button class="qty-btn" onclick="changeQty('${prodId}', -1)">—</button>
+                        <span>${count}</span>
+                        <button class="qty-btn" onclick="changeQty('${prodId}', 1)">+</button>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <button class="price-value-btn" style="margin-bottom: 4px;">${product.price} грн</button>
+                    <button class="cart-action-btn" onclick="addToCart('${prodId}')">
+                        <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                    </button>
+                `;
+            }
         }
-        
-        list.innerHTML = orders.map((o, idx) => {
-            const statusClass = o.status === 'approved' ? 'approved' : 
-                              o.status === 'rejected' ? 'rejected' : 'pending';
-            const statusText = o.status === 'approved' ? '✅ Підтверджено' : 
-                             o.status === 'rejected' ? '❌ Відхилено' : '⏳ Очікує';
+
+        function openProductDetails(product) {
+            const oxideId = document.getElementById('oxide-id').value.trim();
+            if (oxideId.length < 2) {
+                alert(locales[currentLang].alertId);
+                return;
+            }
+
+            selectedModalProduct = product;
             
-            // Безпечне перетворення об'єкта в рядок для onclick
-            const orderStr = JSON.stringify(o).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            document.getElementById('m-title').innerText = product.name;
+            document.getElementById('m-img').src = product.img;
+            document.getElementById('m-bonus-title').innerText = product.bonus;
+            document.getElementById('m-price-btn').innerText = `${product.price} грн`;
             
-            return `
-                <div class="order-card ${statusClass}">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                        <b>${o.cheat}</b>
-                        <span style="font-size:12px;">${o.id}</span>
-                    </div>
-                    <div style="font-size:13px; margin-bottom:10px;">
-                        👤 ${o.userName} (ID: ${o.userId})<br>
-                        📅 ${o.days} дн. • 💰 ${o.price} ${o.currency}<br>
-                        🆔 ${o.tag}<br>
-                        💳 ${o.paymentMethod === 'card' ? 'Картка' : 'CryptoBot'}<br>
-                        📊 ${statusText}
-                    </div>
-                    ${o.status === 'pending' ? `
-                        <div class="order-actions">
-                            <button class="btn-deliver" onclick='openDeliverySheet(${orderStr})'>📦 ВИДАТИ ТОВАР</button>
-                            <button class="btn-reject" onclick="rejectOrder('${o.id}')">❌ ВІДХИЛИТИ</button>
+            const badge = document.getElementById('m-badge');
+            if(product.badge) {
+                badge.innerText = product.badge;
+                badge.style.display = 'block';
+            } else {
+                badge.style.display = 'none';
+            }
+
+            document.getElementById('m-add-cart-btn').onclick = () => {
+                addToCart(product.id);
+                closeModal('modal-product');
+            };
+
+            document.getElementById('modal-product').classList.add('active');
+            tg.HapticFeedback.selectionChanged();
+        }
+
+        function buyDirectFromModal() {
+            if (!selectedModalProduct) return;
+            cart = {}; 
+            cart[selectedModalProduct.id] = 1;
+            initShop();
+            closeModal('modal-product');
+            goToPayment();
+        }
+
+        function addToCart(prodId) {
+            const oxideId = document.getElementById('oxide-id').value.trim();
+            if (oxideId.length < 2) {
+                alert(locales[currentLang].alertId);
+                return;
+            }
+            cart[prodId] = (cart[prodId] || 0) + 1;
+            tg.HapticFeedback.selectionChanged();
+            renderProductButton(prodId);
+            updateCartCounter();
+        }
+
+        function changeQty(prodId, delta) {
+            if (!cart[prodId]) return;
+            cart[prodId] += delta;
+            if (cart[prodId] <= 0) {
+                delete cart[prodId];
+            }
+            renderProductButton(prodId);
+            updateCartCounter();
+            if(document.getElementById('modal-cart').classList.contains('active')) {
+                renderCartModalItems();
+            }
+        }
+
+        function updateCartCounter() {
+            let totalItems = 0;
+            for (let id in cart) {
+                totalItems += cart[id];
+            }
+            document.getElementById('global-cart-count').innerText = totalItems;
+        }
+
+        function scrollToSection(sectionId, tabElement) {
+            document.querySelectorAll('.category-tab').forEach(tab => tab.classList.remove('active'));
+            tabElement.classList.add('active');
+            document.getElementById(sectionId).scrollIntoView({ behavior: 'smooth' });
+            tg.HapticFeedback.impactOccurred('light');
+        }
+
+        function toggleLangDropdown() {
+            document.getElementById('lang-menu').classList.toggle('active');
+        }
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            document.getElementById('lang-menu').classList.remove('active');
+            
+            document.getElementById('lang-step1').innerText = locales[lang].step1;
+            document.getElementById('tab-coins').innerText = locales[lang].coins;
+            document.getElementById('tab-tickets').innerText = locales[lang].tickets;
+            document.getElementById('tab-bp').innerText = locales[lang].bp;
+            document.getElementById('tab-premium').innerText = locales[lang].premium;
+            
+            document.getElementById('lang-cart-title').innerText = locales[lang].cartTitle;
+            document.getElementById('lang-clear-all').innerText = locales[lang].clearAll;
+            document.getElementById('lang-total-lbl').innerText = locales[lang].totalLbl;
+            document.getElementById('lang-tax-info').innerText = locales[lang].taxInfo;
+            document.getElementById('lang-btn-pay').innerText = locales[lang].btnPay;
+            document.getElementById('lang-btn-continue').innerText = locales[lang].btnContinue;
+            
+            document.getElementById('lang-pay-header').innerText = locales[lang].payHeader;
+            document.getElementById('lang-pay-transfer-msg').innerText = locales[lang].transferMsg;
+            document.getElementById('lang-copy-btn').innerText = locales[lang].copyBtn;
+            document.getElementById('lang-attach-receipt').innerText = locales[lang].attachReceipt;
+            document.getElementById('lang-confirm-pay-btn').innerText = locales[lang].confirmPay;
+
+            document.getElementById('lang-status-title').innerText = locales[lang].statusTitle;
+            document.getElementById('lang-status-text').innerText = locales[lang].statusText;
+            
+            if(!base64Image) {
+                document.getElementById('upload-text').innerText = locales[lang].uploadText;
+            }
+        }
+
+        function syncIdDisplay() {
+            const val = document.getElementById('oxide-id').value.trim();
+            document.getElementById('nav-id-display').innerText = val ? `ID: ${val}` : "ID: ———";
+        }
+
+        function openCartModal() {
+            renderCartModalItems();
+            document.getElementById('modal-cart').classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function clearCart() {
+            cart = {};
+            initShop();
+            renderCartModalItems();
+        }
+
+        function renderCartModalItems() {
+            const container = document.getElementById('cart-items-render');
+            container.innerHTML = '';
+            let totalSum = 0;
+
+            for (let id in cart) {
+                const product = productsData.find(p => p.id === id);
+                const count = cart[id];
+                const itemTotal = product.price * count;
+                totalSum += itemTotal;
+
+                const row = document.createElement('div');
+                row.className = 'cart-item-row';
+                row.innerHTML = `
+                    <img class="cart-item-img" src="${product.img}">
+                    <div class="cart-item-info">
+                        <div class="cart-item-name">${product.name}</div>
+                        <div class="cart-item-price">${product.price} грн</div>
+                        <div class="cart-item-controls">
+                            <div class="row-qty-box">
+                                <button class="row-qty-btn" onclick="changeQty('${id}', -1)">-</button>
+                                <div class="row-qty-val">${count}</div>
+                                <button class="row-qty-btn" onclick="changeQty('${id}', 1)">+</button>
+                            </div>
+                            <button class="row-del-btn" onclick="changeQty('${id}', -${count})">🗑️</button>
                         </div>
-                    ` : ''}
-                </div>
-            `;
-        }).join('');
-    }
+                    </div>
+                `;
+                container.appendChild(row);
+            }
 
-    async function rejectOrder(orderId) {
-        let orders = JSON.parse(localStorage.getItem('plutonium_orders') || '[]');
-        const orderIndex = orders.findIndex(o => o.id === orderId);
-        
-        if(orderIndex === -1) return;
-        
-        orders[orderIndex].status = 'rejected';
-        localStorage.setItem('plutonium_orders', JSON.stringify(orders));
-        
-        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ 
-                chat_id: orders[orderIndex].userId, 
-                text: `❌ *ЗАМОВЛЕННЯ #${orderId} ВІДХИЛЕНО*\n\nПлатіж не знайдено. Спробуйте ще раз.`,
-                parse_mode: "Markdown" 
-            })
-        });
-        
-        renderAdminOrders();
-        tg.HapticFeedback.notificationOccurred('error');
-    }
+            document.getElementById('cart-total-sum').innerText = `${totalSum} грн`;
+        }
 
-    // Ініціалізація
-    loadGames();
-    lucide.createIcons();
-</script>
+        function goToPayment() {
+            let hasItems = Object.keys(cart).length > 0;
+            if(!hasItems) return;
+
+            closeModal('modal-cart');
+            
+            let totalSum = 0;
+            for (let id in cart) {
+                const product = productsData.find(p => p.id === id);
+                totalSum += product.price * cart[id];
+            }
+
+            document.getElementById('pay-final-price').innerText = `${totalSum} грн`;
+            document.getElementById('modal-payment').classList.add('active');
+            
+            base64Image = null;
+            document.getElementById('receipt-file').value = "";
+            document.getElementById('file-preview').style.display = 'none';
+            document.getElementById('upload-text').innerText = locales[currentLang].uploadText;
+            validatePayForm();
+        }
+
+        function copyCardNum() {
+            const cardNum = document.getElementById('target-card').innerText;
+            navigator.clipboard.writeText(cardNum).then(() => {
+                const toast = document.getElementById('toast-msg');
+                toast.innerText = locales[currentLang].toastCopied;
+                toast.style.display = 'block';
+                setTimeout(() => { toast.style.display = 'none'; }, 2000);
+                tg.HapticFeedback.notificationOccurred('success');
+            });
+        }
+
+        function handleFile(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    base64Image = e.target.result;
+                    const preview = document.getElementById('file-preview');
+                    preview.src = base64Image;
+                    preview.style.display = 'block';
+                    document.getElementById('upload-text').innerText = locales[currentLang].fileDone;
+                    validatePayForm();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function validatePayForm() {
+            const btn = document.getElementById('final-submit-btn');
+            btn.disabled = !base64Image;
+        }
+
+        function sendOrderToBot() {
+            const oxideId = document.getElementById('oxide-id').value.trim();
+            
+            let itemsReport = [];
+            for (let id in cart) {
+                const prod = productsData.find(p => p.id === id);
+                itemsReport.push({ id: id, name: prod.name, count: cart[id] });
+            }
+
+            finalDataPayload = {
+                oxide_id: oxideId,
+                items: itemsReport,
+                receipt_img: base64Image
+            };
+
+            closeModal('modal-payment');
+            document.getElementById('modal-status').classList.add('active');
+            tg.HapticFeedback.notificationOccurred('success');
+
+            setTimeout(() => {
+                closeAllAndExit();
+            }, 5000);
+        }
+
+        function closeAllAndExit() {
+            if (finalDataPayload) {
+                tg.sendData(JSON.stringify(finalDataPayload));
+            }
+            tg.close();
+        }
+
+        initShop();
+    </script>
 </body>
 </html>
